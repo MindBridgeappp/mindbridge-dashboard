@@ -91,23 +91,23 @@
     .section { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
     .section-title { font-family: monospace; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 16px; }
     .chart-wrap { position: relative; height: 160px; }
-    .alert-box { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.3); border-radius: 14px; padding: 14px 18px; margin-bottom: 16px; display: flex; gap: 10px; align-items: flex-start; }
-    .alert-box-text { font-size: 13px; color: var(--red); line-height: 1.5; }
+    .alert-box { background: rgba(251,146,60,0.08); border: 1px solid rgba(251,146,60,0.3); border-radius: 14px; padding: 14px 18px; margin-bottom: 16px; display: flex; gap: 10px; align-items: flex-start; }
+    .alert-box-text { font-size: 13px; color: var(--orange); line-height: 1.5; }
     .trigger-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
     .trigger-label { font-size: 13px; color: var(--text); width: 80px; flex-shrink: 0; }
     .trigger-bar-wrap { flex: 1; background: var(--bg3); border-radius: 20px; height: 6px; overflow: hidden; }
-    .trigger-bar { height: 100%; border-radius: 20px; background: var(--blue); transition: width 0.6s ease; }
+    .trigger-bar { height: 100%; border-radius: 20px; transition: width 0.6s ease; }
     .trigger-count { font-size: 12px; color: var(--muted); width: 28px; text-align: right; flex-shrink: 0; }
     .records-list { display: flex; flex-direction: column; gap: 12px; }
     .record-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
-    .record-card.risk { border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.04); }
+    .record-card.risk { border-color: rgba(251,146,60,0.3); background: rgba(251,146,60,0.04); }
     .record-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
     .record-mood { display: flex; align-items: center; gap: 8px; }
     .record-emoji { font-size: 20px; }
     .record-label { font-size: 15px; font-weight: 600; }
     .record-date { font-size: 11px; color: var(--muted); font-family: monospace; }
     .record-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .record-tag { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: var(--bg3); border: 1px solid var(--border); color: var(--muted2); }
+    .record-tag { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
     .record-text { margin-top: 10px; font-size: 13px; color: var(--muted2); font-style: italic; line-height: 1.6; background: var(--bg3); border-radius: 8px; padding: 10px 12px; }
     .record-audio { margin-top: 8px; font-size: 12px; color: var(--blue); }
     .no-records { text-align: center; padding: 48px; color: var(--muted); font-size: 14px; }
@@ -209,21 +209,41 @@ let currentUser = null, currentPsychologist = null, currentPatient = null;
 let currentRecords = [], currentFilter = 7, currentColor = '#16a34a';
 let moodChart = null;
 
-const moodScore = { 'Alegria':5,'Calma':4,'Empolgacao':5,'Cansaco':2,'Preocupacao':2,'Tristeza':1,'Ansiedade':1,'Raiva':1,'Frustracao':2,'Vazio':1 };
+// ── CORES POR GATILHO ──
+const tagColors = {
+  'Trabalho':  { bg: 'rgba(56,189,248,0.15)',  border: 'rgba(56,189,248,0.4)',  text: '#38bdf8' },
+  'Relação':   { bg: 'rgba(236,72,153,0.15)',   border: 'rgba(236,72,153,0.4)',  text: '#ec4899' },
+  'Família':   { bg: 'rgba(74,222,128,0.15)',   border: 'rgba(74,222,128,0.4)',  text: '#4ade80' },
+  'Saúde':     { bg: 'rgba(251,146,60,0.15)',   border: 'rgba(251,146,60,0.4)',  text: '#fb923c' },
+  'Dinheiro':  { bg: 'rgba(250,204,21,0.15)',   border: 'rgba(250,204,21,0.4)',  text: '#facc15' },
+  'Outro':     { bg: 'rgba(148,163,184,0.15)',  border: 'rgba(148,163,184,0.4)', text: '#94a3b8' },
+};
+const tagBarColors = ['#38bdf8','#ec4899','#4ade80','#fb923c','#facc15','#a78bfa','#94a3b8'];
+
+function getTagStyle(tag) {
+  return tagColors[tag] || { bg: 'rgba(148,163,184,0.15)', border: 'rgba(148,163,184,0.4)', text: '#94a3b8' };
+}
+
 const moodScorePT = { 'Alegria':5,'Calma':4,'Empolgação':5,'Cansaço':2,'Preocupação':2,'Tristeza':1,'Ansiedade':1,'Raiva':1,'Frustração':2,'Vazio':1 };
 const moodColors = { 'Alegria':'#4ade80','Calma':'#38bdf8','Empolgação':'#f59e0b','Cansaço':'#94a3b8','Preocupação':'#fb923c','Tristeza':'#a78bfa','Ansiedade':'#fb923c','Raiva':'#f87171','Frustração':'#e879f9','Vazio':'#64748b' };
+function getMoodScore(mood) { return moodScorePT[mood] || 3; }
 
-function getMoodScore(mood) { return moodScorePT[mood] || moodScore[mood] || 3; }
-
-// ── HELPER: normaliza tags independente do formato ──
 function parseTags(tags) {
   if (!tags) return [];
   if (Array.isArray(tags)) return tags;
   if (typeof tags === 'string') {
-    try { const parsed = JSON.parse(tags); return Array.isArray(parsed) ? parsed : [tags]; }
+    try { const p = JSON.parse(tags); return Array.isArray(p) ? p : [tags]; }
     catch(e) { return [tags]; }
   }
   return [];
+}
+
+// ── ALTO RISCO: só quando 3+ registros de Ansiedade/Raiva em 7 dias ──
+function isHighRiskPatient(records) {
+  const last7days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const recent = records.filter(r => new Date(r.created_at) >= last7days);
+  const count = recent.filter(r => r.mood === 'Ansiedade' || r.mood === 'Raiva').length;
+  return count >= 3;
 }
 
 async function init() {
@@ -273,7 +293,6 @@ async function handleRegister() {
 }
 
 async function handleLogout() { await sb.auth.signOut(); }
-
 function showApp() { document.getElementById('auth-screen').style.display='none'; document.getElementById('app-screen').style.display='block'; loadPatients(); }
 function showAuth() { document.getElementById('auth-screen').style.display='flex'; document.getElementById('app-screen').style.display='none'; currentUser=null; currentPsychologist=null; }
 function showDashboard() { document.getElementById('view-dashboard').classList.add('active'); document.getElementById('view-detail').classList.remove('active'); }
@@ -291,12 +310,12 @@ async function loadPatients() {
   }
   countEl.textContent = patients.length + ' paciente' + (patients.length>1?'s':'');
   const ids = patients.map(p => p.id);
-  const { data: records } = await sb.from('records').select('patient_id, is_high_risk, created_at, mood').in('patient_id', ids).order('created_at', { ascending: false });
+  const { data: records } = await sb.from('records').select('*').in('patient_id', ids).order('created_at', { ascending: false });
   container.innerHTML = '';
   const grid = document.createElement('div'); grid.className = 'patients-grid';
   patients.forEach(patient => {
     const patRecords = records ? records.filter(r => r.patient_id === patient.id) : [];
-    const hasRisk = patRecords.some(r => r.is_high_risk);
+    const hasRisk = isHighRiskPatient(patRecords);
     const lastRecord = patRecords[0];
     const riskClass = hasRisk ? 'risk-high' : patRecords.length > 0 ? 'risk-ok' : 'risk-medium';
     const riskLabel = hasRisk ? '⚠️ Atenção' : patRecords.length > 0 ? '✓ Ok' : '— Sem dados';
@@ -307,21 +326,28 @@ async function loadPatients() {
     const color = colors[patient.id % colors.length] || colors[0];
     const card = document.createElement('div'); card.className = 'patient-card';
     card.innerHTML = '<div class="patient-card-top"><div class="patient-avatar" style="background:'+color+'">'+initials+'</div><span class="risk-badge '+riskClass+'">'+riskLabel+'</span></div><div class="patient-name">'+patient.name+'</div><div class="patient-meta">Último registro: '+lastDate+' · '+patRecords.length+' registro'+(patRecords.length!==1?'s':'')+'</div><div class="patient-link-box" onclick="event.stopPropagation()"><span class="patient-link-txt">'+link+'</span><button class="btn-copy" onclick="copyLink(\''+link+'\')">Copiar</button></div>';
-    card.addEventListener('click', () => openPatient(patient, color));
+    card.addEventListener('click', () => openPatient(patient, patRecords, color));
     grid.appendChild(card);
   });
   container.appendChild(grid);
 }
 
-async function openPatient(patient, color) {
+async function openPatient(patient, preloadedRecords, color) {
   currentPatient = patient; currentColor = color; currentFilter = 7;
   const initials = patient.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('detail-avatar').style.background = color;
   document.getElementById('detail-avatar').textContent = initials;
   document.getElementById('detail-name').textContent = patient.name;
   document.querySelectorAll('.filter-tab').forEach((b,i) => b.classList.toggle('active', i===0));
-  const { data } = await sb.from('records').select('*').eq('patient_id', patient.id).order('created_at', { ascending: false });
-  currentRecords = data || [];
+
+  // Use preloaded or fetch
+  if (preloadedRecords) {
+    currentRecords = preloadedRecords;
+  } else {
+    const { data } = await sb.from('records').select('*').eq('patient_id', patient.id).order('created_at', { ascending: false });
+    currentRecords = data || [];
+  }
+
   document.getElementById('detail-meta').textContent = currentRecords.length+' registro'+(currentRecords.length!==1?'s':'')+' · Paciente desde '+new Date(patient.created_at).toLocaleDateString('pt-BR');
   renderDetail();
   showDetail();
@@ -334,35 +360,42 @@ function setFilter(days, btn) {
   renderDetail();
 }
 
+function filterRecords() {
+  const now = new Date();
+  if (currentFilter === 1) {
+    let filtered = currentRecords.filter(r => new Date(r.created_at).toDateString() === now.toDateString());
+    if (filtered.length === 0) {
+      const lastDate = new Date(currentRecords[0].created_at).toDateString();
+      filtered = currentRecords.filter(r => new Date(r.created_at).toDateString() === lastDate);
+    }
+    return filtered;
+  } else {
+    const cutoff = new Date(now - currentFilter * 24 * 60 * 60 * 1000);
+    const filtered = currentRecords.filter(r => new Date(r.created_at) >= cutoff);
+    return filtered.length > 0 ? filtered : currentRecords.slice(0, 10);
+  }
+}
+
 function renderDetail() {
   const container = document.getElementById('detail-content');
   if (!currentRecords || currentRecords.length === 0) {
     container.innerHTML = '<div class="no-records">Nenhum registro ainda.</div>';
     return;
   }
-  const now = new Date();
-  let filtered;
-  if (currentFilter === 1) {
-    filtered = currentRecords.filter(r => new Date(r.created_at).toDateString() === now.toDateString());
-    if (filtered.length === 0) {
-      const lastDate = new Date(currentRecords[0].created_at).toDateString();
-      filtered = currentRecords.filter(r => new Date(r.created_at).toDateString() === lastDate);
-    }
-  } else {
-    const cutoff = new Date(now - currentFilter * 24 * 60 * 60 * 1000);
-    filtered = currentRecords.filter(r => new Date(r.created_at) >= cutoff);
-    if (filtered.length === 0) filtered = currentRecords.slice(0, 10);
-  }
 
+  const filtered = filterRecords();
   const chartData = buildChartData(filtered, currentFilter);
   const triggers = buildTriggers(filtered);
   const alertMsg = checkAlert(filtered);
 
   let html = '<div class="section"><div class="section-title">📈 Humor — '+(currentFilter === 1 ? 'Hoje' : currentFilter+' dias')+'</div><div class="chart-wrap"><canvas id="mood-chart"></canvas></div></div>';
-  if (alertMsg) html += '<div class="alert-box"><span style="font-size:18px">⚠️</span><div class="alert-box-text"><strong>Alerta automático:</strong> '+alertMsg+'</div></div>';
+  if (alertMsg) html += '<div class="alert-box"><span style="font-size:18px">⚠️</span><div class="alert-box-text"><strong>Atenção:</strong> '+alertMsg+'</div></div>';
   if (triggers.length > 0) {
     html += '<div class="section"><div class="section-title">🏷 Gatilhos frequentes</div>';
-    triggers.forEach(t => { html += '<div class="trigger-row"><span class="trigger-label">'+t.label+'</span><div class="trigger-bar-wrap"><div class="trigger-bar" style="width:'+t.pct+'%"></div></div><span class="trigger-count">×'+t.count+'</span></div>'; });
+    triggers.forEach((t, i) => {
+      const color = tagBarColors[i % tagBarColors.length];
+      html += '<div class="trigger-row"><span class="trigger-label">'+t.label+'</span><div class="trigger-bar-wrap"><div class="trigger-bar" style="width:'+t.pct+'%;background:'+color+'"></div></div><span class="trigger-count">×'+t.count+'</span></div>';
+    });
     html += '</div>';
   }
   html += '<div class="section"><div class="section-title">📋 Registros ('+filtered.length+')</div><div class="records-list" id="records-list"></div></div>';
@@ -373,12 +406,20 @@ function renderDetail() {
   const list = document.getElementById('records-list');
   filtered.forEach(r => {
     const card = document.createElement('div');
-    card.className = 'record-card' + (r.is_high_risk ? ' risk' : '');
+    const isRisk = r.mood === 'Ansiedade' || r.mood === 'Raiva';
+    card.className = 'record-card' + (isRisk ? ' risk' : '');
     const date = new Date(r.created_at).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
     const moodColor = r.mood_color || moodColors[r.mood] || '#e2eaf4';
     const tags = parseTags(r.tags);
-    let inner = '<div class="record-top"><div class="record-mood"><span class="record-emoji">'+(r.mood_emoji||'😶')+'</span><span class="record-label" style="color:'+moodColor+'">'+r.mood+'</span>'+(r.is_high_risk?'<span class="risk-badge risk-high" style="font-size:10px">⚠️ Alto risco</span>':'')+'</div><span class="record-date">'+date+'</span></div>';
-    if (tags.length > 0) inner += '<div class="record-tags">'+tags.map(t=>'<span class="record-tag">'+t+'</span>').join('')+'</div>';
+    let inner = '<div class="record-top"><div class="record-mood"><span class="record-emoji">'+(r.mood_emoji||'😶')+'</span><span class="record-label" style="color:'+moodColor+'">'+r.mood+'</span></div><span class="record-date">'+date+'</span></div>';
+    if (tags.length > 0) {
+      inner += '<div class="record-tags">';
+      tags.forEach(t => {
+        const st = getTagStyle(t);
+        inner += '<span class="record-tag" style="background:'+st.bg+';border:1px solid '+st.border+';color:'+st.text+'">'+t+'</span>';
+      });
+      inner += '</div>';
+    }
     if (r.text_note) inner += '<div class="record-text">"'+r.text_note+'"</div>';
     if (r.has_audio) inner += '<div class="record-audio">🎙 Áudio gravado</div>';
     card.innerHTML = inner;
@@ -432,9 +473,7 @@ function drawChart({ labels, data, colors }) {
 
 function buildTriggers(records) {
   const counts = {};
-  records.forEach(r => {
-    parseTags(r.tags).forEach(t => { counts[t] = (counts[t]||0) + 1; });
-  });
+  records.forEach(r => { parseTags(r.tags).forEach(t => { counts[t] = (counts[t]||0) + 1; }); });
   const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
   if (sorted.length === 0) return [];
   const max = sorted[0][1];
@@ -442,14 +481,14 @@ function buildTriggers(records) {
 }
 
 function checkAlert(records) {
-  const last7 = records.slice(0,7);
-  const highRisk = last7.filter(r=>r.is_high_risk).length;
-  if (highRisk >= 3) return highRisk+' registros de alto risco nos últimos registros.';
-  const scores = last7.map(r=>getMoodScore(r.mood));
-  const avg = scores.reduce((a,b)=>a+b,0)/scores.length;
-  if (avg <= 1.8 && last7.length >= 3) return 'Média de humor muito baixa nos últimos registros ('+avg.toFixed(1)+'/5).';
-  const consec = records.slice(0,3).filter(r=>getMoodScore(r.mood)<=2).length;
-  if (consec === 3) return '3 registros consecutivos com humor negativo.';
+  // Alerta só quando 3+ registros de Ansiedade/Raiva nos últimos 7 dias
+  const last7days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const recent = records.filter(r => new Date(r.created_at) >= last7days);
+  const highCount = recent.filter(r => r.mood === 'Ansiedade' || r.mood === 'Raiva').length;
+  if (highCount >= 3) return highCount + ' registros de Ansiedade ou Raiva nos últimos 7 dias — padrão que merece atenção.';
+  // Alerta de humor muito baixo consecutivo
+  const last3 = records.slice(0,3);
+  if (last3.length === 3 && last3.every(r => getMoodScore(r.mood) <= 2)) return '3 registros consecutivos com humor negativo.';
   return null;
 }
 
