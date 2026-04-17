@@ -393,7 +393,7 @@ function renderDetail() {
   if (triggers.length > 0) {
     html += '<div class="section"><div class="section-title">🏷 Gatilhos frequentes</div>';
     triggers.forEach((t, i) => {
-      const color = tagBarColors[i % tagBarColors.length];
+      const color = getTagStyle(t.label).text;
       html += '<div class="trigger-row"><span class="trigger-label">'+t.label+'</span><div class="trigger-bar-wrap"><div class="trigger-bar" style="width:'+t.pct+'%;background:'+color+'"></div></div><span class="trigger-count">×'+t.count+'</span></div>';
     });
     html += '</div>';
