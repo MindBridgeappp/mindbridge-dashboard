@@ -445,7 +445,7 @@ function renderDetail() {
         </div>
         <span class="record-date">${date}</span>
       </div>
-      ${r.tags && r.tags.length > 0 ? `<div class="record-tags">${r.tags.map(t=>`<span class="record-tag">${t}</span>`).join('')}</div>` : ''}
+      ${r.tags && r.tags.length > 0 ? `<div class="record-tags">${Array.isArray(r.tags) ? r.tags.map(t=>`<span class="record-tag">${t}</span>`).join('') : ''}</div>` : ''}
       ${r.text_note ? `<div class="record-text">"${r.text_note}"</div>` : ''}
       ${r.has_audio ? '<div class="record-audio">🎙 Áudio gravado</div>' : ''}`;
     list.appendChild(card);
