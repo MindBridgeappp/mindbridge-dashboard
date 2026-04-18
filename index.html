@@ -421,8 +421,11 @@ function renderDetail() {
       inner += '</div>';
     }
     if (r.text_note) inner += '<div class="record-text">"'+r.text_note+'"</div>';
-    if (r.has_audio && r.audio_url) { inner += '<div class="record-audio" style="margin-top:10px">🎙 <a href="' + r.audio_url + '" target="_blank" style="color:#38bdf8;font-size:13px;text-decoration:none;">Ouvir desabafo</a></div>'; } else if (r.has_audio) { inner += '<div class="record-audio">🎙 Áudio gravado</div>'; }
-    card.innerHTML = inner;
+if (r.has_audio && r.audio_url) {
+  inner += '<div class="record-audio" style="margin-top:10px"><audio controls style="width:100%;height:36px;filter:invert(0.8)"><source src="' + r.audio_url + '" type="audio/mp4"></audio></div>';
+} else if (r.has_audio) {
+  inner += '<div class="record-audio">🎙 Áudio gravado</div>';
+}    card.innerHTML = inner;
     list.appendChild(card);
   });
 }
