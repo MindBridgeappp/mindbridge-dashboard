@@ -50,14 +50,11 @@
     .page-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
     .btn-add { display: flex; align-items: center; gap: 8px; background: var(--accent); color: white; border: none; border-radius: 12px; padding: 11px 20px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; box-shadow: 0 0 20px rgba(74,222,128,0.15); }
     .btn-add:hover { opacity: 0.9; }
-
-    /* SEARCH */
     .search-wrap { margin-bottom: 24px; position: relative; }
     .search-input { width: 100%; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 11px 16px 11px 40px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
     .search-input:focus { border-color: var(--green); }
     .search-input::placeholder { color: var(--muted); }
     .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 15px; pointer-events: none; }
-
     .patients-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
     .patient-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 20px; cursor: pointer; transition: border-color 0.2s, transform 0.2s; }
     .patient-card:hover { border-color: var(--border2); transform: translateY(-2px); }
@@ -128,6 +125,19 @@
     .spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
     .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg2); border: 1px solid var(--green-border); border-radius: 12px; padding: 12px 18px; font-size: 13px; color: var(--green); z-index: 999; opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; }
     .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* LEMBRETES */
+    .reminder-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; min-height: 32px; }
+    .reminder-chip { display: flex; align-items: center; gap: 6px; background: var(--green-dim); border: 1px solid var(--green-border); border-radius: 20px; padding: 5px 12px; font-size: 13px; color: var(--green); }
+    .reminder-chip-remove { background: none; border: none; color: var(--green); cursor: pointer; font-size: 14px; padding: 0; line-height: 1; opacity: 0.7; }
+    .reminder-chip-remove:hover { opacity: 1; }
+    .reminder-add-row { display: flex; gap: 8px; align-items: center; }
+    .reminder-time-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
+    .reminder-time-input:focus { border-color: var(--green); }
+    .btn-reminder-add { background: var(--accent); color: white; border: none; border-radius: 10px; padding: 8px 16px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .btn-reminder-add:hover { opacity: 0.9; }
+    .reminder-empty { font-size: 13px; color: var(--muted); }
+
     @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
@@ -198,12 +208,21 @@
           <button class="filter-tab" onclick="setFilter(1, this)">Diário</button>
         </div>
       </div>
+      <!-- LEMBRETES -->
+      <div class="section" id="reminders-section">
+        <div class="section-title">🔔 Lembretes de registro</div>
+        <div class="reminder-chips" id="reminder-chips"></div>
+        <div class="reminder-add-row">
+          <input type="time" class="reminder-time-input" id="reminder-time-input" />
+          <button class="btn-reminder-add" onclick="addReminder()">+ Adicionar</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:10px">Os lembretes serão enviados automaticamente quando o app estiver publicado nas lojas.</div>
+      </div>
       <div id="detail-content"><div class="loading"><div class="spinner"></div> Carregando...</div></div>
     </div>
   </div>
 </div>
 
-<!-- Modal novo paciente -->
 <div class="modal-overlay" id="add-modal">
   <div class="modal">
     <div class="modal-title">Novo Paciente</div>
@@ -217,11 +236,10 @@
   </div>
 </div>
 
-<!-- Modal confirmar exclusão -->
 <div class="modal-overlay" id="delete-modal">
   <div class="modal">
     <div class="modal-title">Excluir Paciente</div>
-    <div class="modal-sub" id="delete-modal-sub">Tem certeza? Todos os registros do paciente serão apagados permanentemente.</div>
+    <div class="modal-sub" id="delete-modal-sub"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeDeleteModal()">Cancelar</button>
       <button class="btn-confirm-danger" onclick="confirmDelete()">Excluir</button>
@@ -240,7 +258,8 @@ let currentRecords = [], currentFilter = 7, currentColor = '#16a34a';
 let moodChart = null;
 let allPatients = [], allRecords = [];
 let patientToDelete = null;
-let selectedDayDate = null; // para filtrar por dia ao clicar no gráfico
+let selectedDayDate = null;
+let currentReminders = [];
 
 const tagColors = {
   'Trabalho':  { bg: 'rgba(56,189,248,0.15)',  border: 'rgba(56,189,248,0.4)',  text: '#38bdf8' },
@@ -250,10 +269,7 @@ const tagColors = {
   'Dinheiro':  { bg: 'rgba(250,204,21,0.15)',   border: 'rgba(250,204,21,0.4)',  text: '#facc15' },
   'Outro':     { bg: 'rgba(148,163,184,0.15)',  border: 'rgba(148,163,184,0.4)', text: '#94a3b8' },
 };
-
-function getTagStyle(tag) {
-  return tagColors[tag] || { bg: 'rgba(148,163,184,0.15)', border: 'rgba(148,163,184,0.4)', text: '#94a3b8' };
-}
+function getTagStyle(tag) { return tagColors[tag] || { bg: 'rgba(148,163,184,0.15)', border: 'rgba(148,163,184,0.4)', text: '#94a3b8' }; }
 
 const moodScorePT = { 'Alegria':5,'Calma':4,'Empolgação':5,'Cansaço':2,'Preocupação':2,'Tristeza':1,'Ansiedade':1,'Raiva':1,'Frustração':2,'Vazio':1 };
 const moodColors = { 'Alegria':'#4ade80','Calma':'#38bdf8','Empolgação':'#f59e0b','Cansaço':'#94a3b8','Preocupação':'#fb923c','Tristeza':'#a78bfa','Ansiedade':'#fb923c','Raiva':'#f87171','Frustração':'#e879f9','Vazio':'#64748b' };
@@ -262,10 +278,7 @@ function getMoodScore(mood) { return moodScorePT[mood] || 3; }
 function parseTags(tags) {
   if (!tags) return [];
   if (Array.isArray(tags)) return tags;
-  if (typeof tags === 'string') {
-    try { const p = JSON.parse(tags); return Array.isArray(p) ? p : [tags]; }
-    catch(e) { return [tags]; }
-  }
+  if (typeof tags === 'string') { try { const p = JSON.parse(tags); return Array.isArray(p) ? p : [tags]; } catch(e) { return [tags]; } }
   return [];
 }
 
@@ -339,8 +352,7 @@ async function loadPatients() {
   }
   const ids = patients.map(p => p.id);
   const { data: records } = await sb.from('records').select('*').in('patient_id', ids).order('created_at', { ascending: false });
-  allPatients = patients;
-  allRecords = records || [];
+  allPatients = patients; allRecords = records || [];
   countEl.textContent = patients.length + ' paciente' + (patients.length>1?'s':'');
   renderPatients(patients, records || []);
 }
@@ -386,11 +398,9 @@ function renderPatients(patients, records) {
 function filterPatients() {
   const q = document.getElementById('search-input').value.trim().toLowerCase();
   if (!q) { renderPatients(allPatients, allRecords); return; }
-  const filtered = allPatients.filter(p => p.name.toLowerCase().includes(q));
-  renderPatients(filtered, allRecords);
+  renderPatients(allPatients.filter(p => p.name.toLowerCase().includes(q)), allRecords);
 }
 
-// ── DELETE ──
 function openDeleteModal(patientId, patientName) {
   patientToDelete = patientId;
   document.getElementById('delete-modal-sub').textContent = `Tem certeza que quer excluir "${patientName}"? Todos os registros serão apagados permanentemente.`;
@@ -401,9 +411,7 @@ async function confirmDelete() {
   if (!patientToDelete) return;
   await sb.from('records').delete().eq('patient_id', patientToDelete);
   await sb.from('patients').delete().eq('id', patientToDelete);
-  closeDeleteModal();
-  showToast('✓ Paciente excluído.');
-  loadPatients();
+  closeDeleteModal(); showToast('✓ Paciente excluído.'); loadPatients();
 }
 
 async function openPatient(patient, preloadedRecords, color) {
@@ -419,13 +427,62 @@ async function openPatient(patient, preloadedRecords, color) {
     currentRecords = data || [];
   }
   document.getElementById('detail-meta').textContent = currentRecords.length+' registro'+(currentRecords.length!==1?'s':'')+' · Paciente desde '+new Date(patient.created_at).toLocaleDateString('pt-BR');
+
+  // Carrega lembretes
+  currentReminders = patient.reminder_times || [];
+  renderReminders();
+
   renderDetail();
   showDetail();
 }
 
+// ── LEMBRETES ──
+function renderReminders() {
+  const container = document.getElementById('reminder-chips');
+  container.innerHTML = '';
+  if (currentReminders.length === 0) {
+    container.innerHTML = '<span class="reminder-empty">Nenhum lembrete cadastrado.</span>';
+    return;
+  }
+  const sorted = [...currentReminders].sort();
+  sorted.forEach(time => {
+    const chip = document.createElement('div');
+    chip.className = 'reminder-chip';
+    chip.innerHTML = `🔔 ${time} <button class="reminder-chip-remove" onclick="removeReminder('${time}')">✕</button>`;
+    container.appendChild(chip);
+  });
+}
+
+async function addReminder() {
+  const input = document.getElementById('reminder-time-input');
+  const time = input.value;
+  if (!time) { showToast('Selecione um horário.'); return; }
+  if (currentReminders.includes(time)) { showToast('Horário já cadastrado.'); return; }
+  if (currentReminders.length >= 5) { showToast('Máximo de 5 lembretes por paciente.'); return; }
+  currentReminders = [...currentReminders, time];
+  await saveReminders();
+  input.value = '';
+  renderReminders();
+  showToast('✓ Lembrete adicionado!');
+}
+
+async function removeReminder(time) {
+  currentReminders = currentReminders.filter(t => t !== time);
+  await saveReminders();
+  renderReminders();
+  showToast('✓ Lembrete removido.');
+}
+
+async function saveReminders() {
+  await sb.from('patients').update({ reminder_times: currentReminders }).eq('id', currentPatient.id);
+  // Atualiza o paciente local
+  const p = allPatients.find(p => p.id === currentPatient.id);
+  if (p) p.reminder_times = currentReminders;
+  currentPatient.reminder_times = currentReminders;
+}
+
 function setFilter(days, btn) {
-  currentFilter = days;
-  selectedDayDate = null;
+  currentFilter = days; selectedDayDate = null;
   document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderDetail();
@@ -433,10 +490,7 @@ function setFilter(days, btn) {
 
 function filterRecords() {
   const now = new Date();
-  // Se tem um dia selecionado pelo clique no gráfico
-  if (selectedDayDate) {
-    return currentRecords.filter(r => new Date(r.created_at).toDateString() === selectedDayDate);
-  }
+  if (selectedDayDate) return currentRecords.filter(r => new Date(r.created_at).toDateString() === selectedDayDate);
   if (currentFilter === 1) {
     let filtered = currentRecords.filter(r => new Date(r.created_at).toDateString() === now.toDateString());
     if (filtered.length === 0) {
@@ -451,57 +505,50 @@ function filterRecords() {
   }
 }
 
+function filterRecordsForPeriod() {
+  const now = new Date();
+  const cutoff = new Date(now - currentFilter * 24 * 60 * 60 * 1000);
+  const filtered = currentRecords.filter(r => new Date(r.created_at) >= cutoff);
+  return filtered.length > 0 ? filtered : currentRecords.slice(0, 10);
+}
+
+function clearDayFilter() { selectedDayDate = null; renderDetail(); }
+
 function renderDetail() {
   const container = document.getElementById('detail-content');
   if (!currentRecords || currentRecords.length === 0) {
     container.innerHTML = '<div class="no-records">Nenhum registro ainda.</div>';
     return;
   }
-
   const filtered = filterRecords();
   const chartData = buildChartData(currentFilter === 1 ? filtered : filterRecordsForPeriod(), currentFilter);
   const triggers = buildTriggers(filtered);
   const alertMsg = checkAlert(filtered);
 
-  const periodLabel = selectedDayDate
-    ? new Date(selectedDayDate).toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit'})
-    : currentFilter === 1 ? 'Hoje' : currentFilter + ' dias';
-
   let html = `<div class="section"><div class="section-title">📈 Humor — ${currentFilter === 1 ? 'Hoje' : currentFilter+' dias'}</div><div class="chart-wrap"><canvas id="mood-chart"></canvas></div>${currentFilter !== 1 ? '<div class="chart-hint">Clique em um ponto para ver os registros do dia</div>' : ''}</div>`;
-  if (alertMsg) html += '<div class="alert-box"><span style="font-size:18px">⚠️</span><div class="alert-box-text"><strong>Atenção:</strong> '+alertMsg+'</div></div>';
+  if (alertMsg) html += `<div class="alert-box"><span style="font-size:18px">⚠️</span><div class="alert-box-text"><strong>Atenção:</strong> ${alertMsg}</div></div>`;
   if (triggers.length > 0) {
     html += '<div class="section"><div class="section-title">🏷 Gatilhos frequentes</div>';
-    triggers.forEach((t) => {
-      const color = getTagStyle(t.label).text;
-      html += '<div class="trigger-row"><span class="trigger-label">'+t.label+'</span><div class="trigger-bar-wrap"><div class="trigger-bar" style="width:'+t.pct+'%;background:'+color+'"></div></div><span class="trigger-count">×'+t.count+'</span></div>';
-    });
+    triggers.forEach(t => { const color = getTagStyle(t.label).text; html += `<div class="trigger-row"><span class="trigger-label">${t.label}</span><div class="trigger-bar-wrap"><div class="trigger-bar" style="width:${t.pct}%;background:${color}"></div></div><span class="trigger-count">×${t.count}</span></div>`; });
     html += '</div>';
   }
-  const recordsTitle = selectedDayDate
-    ? `📋 Registros de ${new Date(selectedDayDate).toLocaleDateString('pt-BR')} (${filtered.length})`
-    : `📋 Registros (${filtered.length})`;
+  const recordsTitle = selectedDayDate ? `📋 Registros de ${new Date(selectedDayDate).toLocaleDateString('pt-BR')} (${filtered.length})` : `📋 Registros (${filtered.length})`;
   html += `<div class="section"><div class="section-title" style="display:flex;align-items:center;justify-content:space-between">${recordsTitle}${selectedDayDate ? '<button onclick="clearDayFilter()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:var(--muted);font-size:11px;cursor:pointer;font-family:DM Sans,sans-serif">✕ Ver todos</button>' : ''}</div><div class="records-list" id="records-list"></div></div>`;
   container.innerHTML = html;
-
   drawChart(chartData);
 
   const list = document.getElementById('records-list');
   filtered.forEach(r => {
     const card = document.createElement('div');
-    const isRisk = r.mood === 'Ansiedade' || r.mood === 'Raiva';
-    card.className = 'record-card' + (isRisk ? ' risk' : '');
+    card.className = 'record-card' + ((r.mood === 'Ansiedade' || r.mood === 'Raiva') ? ' risk' : '');
     const date = new Date(r.created_at).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
     const moodColor = r.mood_color || moodColors[r.mood] || '#e2eaf4';
     const tags = parseTags(r.tags);
-    let inner = '<div class="record-top"><div class="record-mood"><span class="record-emoji">'+(r.mood_emoji||'😶')+'</span><span class="record-label" style="color:'+moodColor+'">'+r.mood+'</span></div><span class="record-date">'+date+'</span></div>';
-    if (tags.length > 0) {
-      inner += '<div class="record-tags">';
-      tags.forEach(t => { const st = getTagStyle(t); inner += '<span class="record-tag" style="background:'+st.bg+';border:1px solid '+st.border+';color:'+st.text+'">'+t+'</span>'; });
-      inner += '</div>';
-    }
-    if (r.text_note) inner += '<div class="record-text">"'+r.text_note+'"</div>';
+    let inner = `<div class="record-top"><div class="record-mood"><span class="record-emoji">${r.mood_emoji||'😶'}</span><span class="record-label" style="color:${moodColor}">${r.mood}</span></div><span class="record-date">${date}</span></div>`;
+    if (tags.length > 0) { inner += '<div class="record-tags">'; tags.forEach(t => { const st = getTagStyle(t); inner += `<span class="record-tag" style="background:${st.bg};border:1px solid ${st.border};color:${st.text}">${t}</span>`; }); inner += '</div>'; }
+    if (r.text_note) inner += `<div class="record-text">"${r.text_note}"</div>`;
     if (r.has_audio && r.audio_url) {
-      inner += '<div class="record-audio" style="margin-top:10px"><audio controls style="width:100%;height:36px;filter:invert(1) hue-rotate(180deg)"><source src="'+r.audio_url+'" type="audio/mp4"></audio></div>';
+      inner += `<div class="record-audio" style="margin-top:10px"><audio controls style="width:100%;height:36px;filter:invert(1) hue-rotate(180deg)"><source src="${r.audio_url}" type="audio/mp4"></audio></div>`;
     } else if (r.has_audio) {
       inner += '<div class="record-audio">🎙 Áudio gravado</div>';
     }
@@ -510,43 +557,21 @@ function renderDetail() {
   });
 }
 
-// Filtra registros para o período completo (para o gráfico)
-function filterRecordsForPeriod() {
-  const now = new Date();
-  const cutoff = new Date(now - currentFilter * 24 * 60 * 60 * 1000);
-  const filtered = currentRecords.filter(r => new Date(r.created_at) >= cutoff);
-  return filtered.length > 0 ? filtered : currentRecords.slice(0, 10);
-}
-
-function clearDayFilter() {
-  selectedDayDate = null;
-  renderDetail();
-}
-
 function buildChartData(records, days) {
   if (days === 1) {
     const byHour = {};
-    records.forEach(r => {
-      const key = new Date(r.created_at).getHours()+'h';
-      if (!byHour[key]) byHour[key] = [];
-      byHour[key].push(getMoodScore(r.mood));
-    });
+    records.forEach(r => { const key = new Date(r.created_at).getHours()+'h'; if (!byHour[key]) byHour[key] = []; byHour[key].push(getMoodScore(r.mood)); });
     const labels = Object.keys(byHour);
     const data = labels.map(k => Math.round(byHour[k].reduce((a,b)=>a+b,0)/byHour[k].length*10)/10);
-    return { labels, data, colors: data.map(v => v<=2?'#f87171':v>=4?'#4ade80':'#38bdf8'), dates: labels };
+    return { labels, data, colors: data.map(v => v<=2?'#f87171':v>=4?'#4ade80':'#38bdf8') };
   } else {
-    const byDay = {}, now = new Date();
-    const dateMap = {}; // mapeia label -> dateString
+    const byDay = {}, now = new Date(), dateMap = {};
     for (let i = days-1; i >= 0; i--) {
       const d = new Date(now - i*86400000);
       const key = d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-      byDay[key] = [];
-      dateMap[key] = d.toDateString();
+      byDay[key] = []; dateMap[key] = d.toDateString();
     }
-    records.forEach(r => {
-      const key = new Date(r.created_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-      if (byDay[key]!==undefined) byDay[key].push(getMoodScore(r.mood));
-    });
+    records.forEach(r => { const key = new Date(r.created_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}); if (byDay[key]!==undefined) byDay[key].push(getMoodScore(r.mood)); });
     const labels = Object.keys(byDay);
     const data = labels.map(k => byDay[k].length>0 ? Math.round(byDay[k].reduce((a,b)=>a+b,0)/byDay[k].length*10)/10 : null);
     return { labels, data, colors: data.map(v => v===null?'#1b2a40':v<=2?'#f87171':v>=4?'#4ade80':'#38bdf8'), dateMap };
@@ -563,20 +588,12 @@ function drawChart({ labels, data, colors, dateMap }) {
       responsive: true, maintainAspectRatio: false,
       onClick: (e, elements) => {
         if (elements.length > 0 && dateMap && currentFilter !== 1) {
-          const idx = elements[0].index;
-          const label = labels[idx];
-          const dateStr = dateMap[label];
-          if (dateStr) {
-            selectedDayDate = dateStr;
-            renderDetail();
-          }
+          const dateStr = dateMap[labels[elements[0].index]];
+          if (dateStr) { selectedDayDate = dateStr; renderDetail(); }
         }
       },
       plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => { const s=['','Muito negativo','Negativo','Neutro','Positivo','Muito positivo']; return s[Math.round(ctx.raw)]||ctx.raw; } } } },
-      scales: {
-        x: { ticks: { color:'#5a7090', font:{size:10} }, grid: { color:'#1b2a40' } },
-        y: { min:0, max:5, ticks: { color:'#5a7090', font:{size:10}, stepSize:1 }, grid: { color:'#1b2a40' } }
-      }
+      scales: { x: { ticks: { color:'#5a7090', font:{size:10} }, grid: { color:'#1b2a40' } }, y: { min:0, max:5, ticks: { color:'#5a7090', font:{size:10}, stepSize:1 }, grid: { color:'#1b2a40' } } }
     }
   });
 }
@@ -614,7 +631,7 @@ async function handleAddPatient() {
   closeAddModal(); showToast('✓ Paciente criado com sucesso!'); loadPatients();
 }
 
-function copyLink(link) { navigator.clipboard.writeText(link); showToast('✓ Link copiado!'); }
+function copyLink(code) { navigator.clipboard.writeText(code); showToast('✓ Código copiado!'); }
 function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
 
 init();
