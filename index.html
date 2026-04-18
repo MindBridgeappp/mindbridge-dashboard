@@ -607,7 +607,7 @@ async function handleAddPatient() {
   const name = document.getElementById('new-patient-name').value.trim();
   if (!name) { document.getElementById('modal-error').textContent='Digite o nome do paciente.'; document.getElementById('modal-error').style.display='block'; return; }
   const btn=document.getElementById('btn-add-patient'); btn.disabled=true; btn.textContent='Criando...';
-  const token = crypto.randomUUID();
+  const token = Math.random().toString(36).substring(2, 8).toUpperCase();
   const { error } = await sb.from('patients').insert({ psychologist_id: currentPsychologist.id, name, link_token: token });
   btn.disabled=false; btn.textContent='Criar link';
   if (error) { document.getElementById('modal-error').textContent='Erro ao criar paciente.'; document.getElementById('modal-error').style.display='block'; return; }
