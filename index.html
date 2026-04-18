@@ -501,7 +501,7 @@ function renderDetail() {
     }
     if (r.text_note) inner += '<div class="record-text">"'+r.text_note+'"</div>';
     if (r.has_audio && r.audio_url) {
-      inner += '<div class="record-audio" style="margin-top:10px"><audio controls style="width:100%;height:36px"><source src="'+r.audio_url+'" type="audio/mp4"></audio></div>';
+      inner += '<div class="record-audio" style="margin-top:10px"><audio controls style="width:100%;height:36px;filter:invert(1) hue-rotate(180deg)"><source src="'+r.audio_url+'" type="audio/mp4"></audio></div>';
     } else if (r.has_audio) {
       inner += '<div class="record-audio">🎙 Áudio gravado</div>';
     }
