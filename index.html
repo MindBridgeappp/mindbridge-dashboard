@@ -45,11 +45,19 @@
     .main-content { max-width: 1100px; margin: 0 auto; padding: 40px 32px; }
     .view { display: none; animation: fadeUp 0.3s ease; }
     .view.active { display: block; }
-    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
     .page-title { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--text); }
     .page-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
     .btn-add { display: flex; align-items: center; gap: 8px; background: var(--accent); color: white; border: none; border-radius: 12px; padding: 11px 20px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; box-shadow: 0 0 20px rgba(74,222,128,0.15); }
     .btn-add:hover { opacity: 0.9; }
+
+    /* SEARCH */
+    .search-wrap { margin-bottom: 24px; position: relative; }
+    .search-input { width: 100%; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 11px 16px 11px 40px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
+    .search-input:focus { border-color: var(--green); }
+    .search-input::placeholder { color: var(--muted); }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 15px; pointer-events: none; }
+
     .patients-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
     .patient-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 20px; cursor: pointer; transition: border-color 0.2s, transform 0.2s; }
     .patient-card:hover { border-color: var(--border2); transform: translateY(-2px); }
@@ -65,6 +73,8 @@
     .patient-link-txt { font-size: 11px; color: var(--muted); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .btn-copy { background: transparent; border: 1px solid var(--border2); border-radius: 6px; padding: 4px 10px; color: var(--muted2); font-size: 11px; cursor: pointer; white-space: nowrap; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
     .btn-copy:hover { border-color: var(--green); color: var(--green); }
+    .btn-delete { background: transparent; border: 1px solid rgba(248,113,113,0.3); border-radius: 6px; padding: 4px 10px; color: var(--red); font-size: 11px; cursor: pointer; white-space: nowrap; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+    .btn-delete:hover { background: rgba(248,113,113,0.1); }
     .empty-state { text-align: center; padding: 80px 24px; color: var(--muted); }
     .empty-icon { font-size: 48px; margin-bottom: 16px; }
     .empty-title { font-size: 18px; color: var(--muted2); margin-bottom: 8px; }
@@ -78,6 +88,8 @@
     .btn-cancel:hover { border-color: var(--muted); color: var(--text); }
     .btn-confirm { flex: 1; padding: 12px; background: var(--accent); border: none; border-radius: 10px; color: white; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
     .btn-confirm:hover { opacity: 0.9; } .btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-confirm-danger { flex: 1; padding: 12px; background: var(--red); border: none; border-radius: 10px; color: white; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .btn-confirm-danger:hover { opacity: 0.9; }
     .back-btn { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; cursor: pointer; margin-bottom: 28px; transition: color 0.2s; background: none; border: none; font-family: 'DM Sans', sans-serif; }
     .back-btn:hover { color: var(--text); }
     .detail-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
@@ -90,7 +102,8 @@
     .filter-tab.active { background: var(--bg2); color: var(--text); font-weight: 600; border: 1px solid var(--border); }
     .section { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
     .section-title { font-family: monospace; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 16px; }
-    .chart-wrap { position: relative; height: 160px; }
+    .chart-wrap { position: relative; height: 160px; cursor: pointer; }
+    .chart-hint { font-size: 11px; color: var(--muted); text-align: right; margin-top: 6px; }
     .alert-box { background: rgba(251,146,60,0.08); border: 1px solid rgba(251,146,60,0.3); border-radius: 14px; padding: 14px 18px; margin-bottom: 16px; display: flex; gap: 10px; align-items: flex-start; }
     .alert-box-text { font-size: 13px; color: var(--orange); line-height: 1.5; }
     .trigger-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
@@ -163,6 +176,10 @@
         </div>
         <button class="btn-add" onclick="openAddModal()">+ Novo Paciente</button>
       </div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="text" id="search-input" placeholder="Buscar paciente pelo nome..." oninput="filterPatients()" />
+      </div>
       <div id="patients-container"><div class="loading"><div class="spinner"></div> Carregando...</div></div>
     </div>
     <div class="view" id="view-detail">
@@ -186,6 +203,7 @@
   </div>
 </div>
 
+<!-- Modal novo paciente -->
 <div class="modal-overlay" id="add-modal">
   <div class="modal">
     <div class="modal-title">Novo Paciente</div>
@@ -199,6 +217,18 @@
   </div>
 </div>
 
+<!-- Modal confirmar exclusão -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal">
+    <div class="modal-title">Excluir Paciente</div>
+    <div class="modal-sub" id="delete-modal-sub">Tem certeza? Todos os registros do paciente serão apagados permanentemente.</div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeDeleteModal()">Cancelar</button>
+      <button class="btn-confirm-danger" onclick="confirmDelete()">Excluir</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -208,8 +238,10 @@ const sb = createClient('https://vuhxuzyovxfufakbrint.supabase.co','sb_publishab
 let currentUser = null, currentPsychologist = null, currentPatient = null;
 let currentRecords = [], currentFilter = 7, currentColor = '#16a34a';
 let moodChart = null;
+let allPatients = [], allRecords = [];
+let patientToDelete = null;
+let selectedDayDate = null; // para filtrar por dia ao clicar no gráfico
 
-// ── CORES POR GATILHO ──
 const tagColors = {
   'Trabalho':  { bg: 'rgba(56,189,248,0.15)',  border: 'rgba(56,189,248,0.4)',  text: '#38bdf8' },
   'Relação':   { bg: 'rgba(236,72,153,0.15)',   border: 'rgba(236,72,153,0.4)',  text: '#ec4899' },
@@ -218,7 +250,6 @@ const tagColors = {
   'Dinheiro':  { bg: 'rgba(250,204,21,0.15)',   border: 'rgba(250,204,21,0.4)',  text: '#facc15' },
   'Outro':     { bg: 'rgba(148,163,184,0.15)',  border: 'rgba(148,163,184,0.4)', text: '#94a3b8' },
 };
-const tagBarColors = ['#38bdf8','#ec4899','#4ade80','#fb923c','#facc15','#a78bfa','#94a3b8'];
 
 function getTagStyle(tag) {
   return tagColors[tag] || { bg: 'rgba(148,163,184,0.15)', border: 'rgba(148,163,184,0.4)', text: '#94a3b8' };
@@ -238,12 +269,10 @@ function parseTags(tags) {
   return [];
 }
 
-// ── ALTO RISCO: só quando 3+ registros de Ansiedade/Raiva em 7 dias ──
 function isHighRiskPatient(records) {
   const last7days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const recent = records.filter(r => new Date(r.created_at) >= last7days);
-  const count = recent.filter(r => r.mood === 'Ansiedade' || r.mood === 'Raiva').length;
-  return count >= 3;
+  return recent.filter(r => r.mood === 'Ansiedade' || r.mood === 'Raiva').length >= 3;
 }
 
 async function init() {
@@ -308,13 +337,24 @@ async function loadPatients() {
     container.innerHTML = '<div class="empty-state"><div class="empty-icon">🌱</div><div class="empty-title">Nenhum paciente ainda</div><div style="font-size:14px;color:var(--muted)">Clique em "Novo Paciente" para gerar o primeiro link.</div></div>';
     return;
   }
-  countEl.textContent = patients.length + ' paciente' + (patients.length>1?'s':'');
   const ids = patients.map(p => p.id);
   const { data: records } = await sb.from('records').select('*').in('patient_id', ids).order('created_at', { ascending: false });
+  allPatients = patients;
+  allRecords = records || [];
+  countEl.textContent = patients.length + ' paciente' + (patients.length>1?'s':'');
+  renderPatients(patients, records || []);
+}
+
+function renderPatients(patients, records) {
+  const container = document.getElementById('patients-container');
+  if (!patients || patients.length === 0) {
+    container.innerHTML = '<div class="no-records" style="padding:48px;text-align:center;color:var(--muted)">Nenhum paciente encontrado.</div>';
+    return;
+  }
   container.innerHTML = '';
   const grid = document.createElement('div'); grid.className = 'patients-grid';
   patients.forEach(patient => {
-    const patRecords = records ? records.filter(r => r.patient_id === patient.id) : [];
+    const patRecords = records.filter(r => r.patient_id === patient.id);
     const hasRisk = isHighRiskPatient(patRecords);
     const lastRecord = patRecords[0];
     const riskClass = hasRisk ? 'risk-high' : patRecords.length > 0 ? 'risk-ok' : 'risk-medium';
@@ -325,29 +365,59 @@ async function loadPatients() {
     const colors = ['#16a34a','#0284c7','#7c3aed','#db2777','#ea580c'];
     const color = colors[patient.id % colors.length] || colors[0];
     const card = document.createElement('div'); card.className = 'patient-card';
-    card.innerHTML = '<div class="patient-card-top"><div class="patient-avatar" style="background:'+color+'">'+initials+'</div><span class="risk-badge '+riskClass+'">'+riskLabel+'</span></div><div class="patient-name">'+patient.name+'</div><div class="patient-meta">Último registro: '+lastDate+' · '+patRecords.length+' registro'+(patRecords.length!==1?'s':'')+'</div><div class="patient-link-box" onclick="event.stopPropagation()"><span class="patient-link-txt">'+link+'</span><button class="btn-copy" onclick="copyLink(\''+link+'\')">Copiar</button></div>';
+    card.innerHTML = `
+      <div class="patient-card-top">
+        <div class="patient-avatar" style="background:${color}">${initials}</div>
+        <span class="risk-badge ${riskClass}">${riskLabel}</span>
+      </div>
+      <div class="patient-name">${patient.name}</div>
+      <div class="patient-meta">Último registro: ${lastDate} · ${patRecords.length} registro${patRecords.length!==1?'s':''}</div>
+      <div class="patient-link-box" onclick="event.stopPropagation()">
+        <span class="patient-link-txt">${link}</span>
+        <button class="btn-copy" onclick="copyLink('${link}')">Copiar</button>
+        <button class="btn-delete" onclick="openDeleteModal(${patient.id}, '${patient.name.replace(/'/g,"\\'")}')">Excluir</button>
+      </div>`;
     card.addEventListener('click', () => openPatient(patient, patRecords, color));
     grid.appendChild(card);
   });
   container.appendChild(grid);
 }
 
+function filterPatients() {
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  if (!q) { renderPatients(allPatients, allRecords); return; }
+  const filtered = allPatients.filter(p => p.name.toLowerCase().includes(q));
+  renderPatients(filtered, allRecords);
+}
+
+// ── DELETE ──
+function openDeleteModal(patientId, patientName) {
+  patientToDelete = patientId;
+  document.getElementById('delete-modal-sub').textContent = `Tem certeza que quer excluir "${patientName}"? Todos os registros serão apagados permanentemente.`;
+  document.getElementById('delete-modal').classList.add('open');
+}
+function closeDeleteModal() { document.getElementById('delete-modal').classList.remove('open'); patientToDelete = null; }
+async function confirmDelete() {
+  if (!patientToDelete) return;
+  await sb.from('records').delete().eq('patient_id', patientToDelete);
+  await sb.from('patients').delete().eq('id', patientToDelete);
+  closeDeleteModal();
+  showToast('✓ Paciente excluído.');
+  loadPatients();
+}
+
 async function openPatient(patient, preloadedRecords, color) {
-  currentPatient = patient; currentColor = color; currentFilter = 7;
+  currentPatient = patient; currentColor = color; currentFilter = 7; selectedDayDate = null;
   const initials = patient.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('detail-avatar').style.background = color;
   document.getElementById('detail-avatar').textContent = initials;
   document.getElementById('detail-name').textContent = patient.name;
   document.querySelectorAll('.filter-tab').forEach((b,i) => b.classList.toggle('active', i===0));
-
-  // Use preloaded or fetch
-  if (preloadedRecords) {
-    currentRecords = preloadedRecords;
-  } else {
+  currentRecords = preloadedRecords || [];
+  if (!preloadedRecords) {
     const { data } = await sb.from('records').select('*').eq('patient_id', patient.id).order('created_at', { ascending: false });
     currentRecords = data || [];
   }
-
   document.getElementById('detail-meta').textContent = currentRecords.length+' registro'+(currentRecords.length!==1?'s':'')+' · Paciente desde '+new Date(patient.created_at).toLocaleDateString('pt-BR');
   renderDetail();
   showDetail();
@@ -355,6 +425,7 @@ async function openPatient(patient, preloadedRecords, color) {
 
 function setFilter(days, btn) {
   currentFilter = days;
+  selectedDayDate = null;
   document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderDetail();
@@ -362,6 +433,10 @@ function setFilter(days, btn) {
 
 function filterRecords() {
   const now = new Date();
+  // Se tem um dia selecionado pelo clique no gráfico
+  if (selectedDayDate) {
+    return currentRecords.filter(r => new Date(r.created_at).toDateString() === selectedDayDate);
+  }
   if (currentFilter === 1) {
     let filtered = currentRecords.filter(r => new Date(r.created_at).toDateString() === now.toDateString());
     if (filtered.length === 0) {
@@ -384,21 +459,28 @@ function renderDetail() {
   }
 
   const filtered = filterRecords();
-  const chartData = buildChartData(filtered, currentFilter);
+  const chartData = buildChartData(currentFilter === 1 ? filtered : filterRecordsForPeriod(), currentFilter);
   const triggers = buildTriggers(filtered);
   const alertMsg = checkAlert(filtered);
 
-  let html = '<div class="section"><div class="section-title">📈 Humor — '+(currentFilter === 1 ? 'Hoje' : currentFilter+' dias')+'</div><div class="chart-wrap"><canvas id="mood-chart"></canvas></div></div>';
+  const periodLabel = selectedDayDate
+    ? new Date(selectedDayDate).toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit'})
+    : currentFilter === 1 ? 'Hoje' : currentFilter + ' dias';
+
+  let html = `<div class="section"><div class="section-title">📈 Humor — ${currentFilter === 1 ? 'Hoje' : currentFilter+' dias'}</div><div class="chart-wrap"><canvas id="mood-chart"></canvas></div>${currentFilter !== 1 ? '<div class="chart-hint">Clique em um ponto para ver os registros do dia</div>' : ''}</div>`;
   if (alertMsg) html += '<div class="alert-box"><span style="font-size:18px">⚠️</span><div class="alert-box-text"><strong>Atenção:</strong> '+alertMsg+'</div></div>';
   if (triggers.length > 0) {
     html += '<div class="section"><div class="section-title">🏷 Gatilhos frequentes</div>';
-    triggers.forEach((t, i) => {
+    triggers.forEach((t) => {
       const color = getTagStyle(t.label).text;
       html += '<div class="trigger-row"><span class="trigger-label">'+t.label+'</span><div class="trigger-bar-wrap"><div class="trigger-bar" style="width:'+t.pct+'%;background:'+color+'"></div></div><span class="trigger-count">×'+t.count+'</span></div>';
     });
     html += '</div>';
   }
-  html += '<div class="section"><div class="section-title">📋 Registros ('+filtered.length+')</div><div class="records-list" id="records-list"></div></div>';
+  const recordsTitle = selectedDayDate
+    ? `📋 Registros de ${new Date(selectedDayDate).toLocaleDateString('pt-BR')} (${filtered.length})`
+    : `📋 Registros (${filtered.length})`;
+  html += `<div class="section"><div class="section-title" style="display:flex;align-items:center;justify-content:space-between">${recordsTitle}${selectedDayDate ? '<button onclick="clearDayFilter()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:var(--muted);font-size:11px;cursor:pointer;font-family:DM Sans,sans-serif">✕ Ver todos</button>' : ''}</div><div class="records-list" id="records-list"></div></div>`;
   container.innerHTML = html;
 
   drawChart(chartData);
@@ -414,20 +496,31 @@ function renderDetail() {
     let inner = '<div class="record-top"><div class="record-mood"><span class="record-emoji">'+(r.mood_emoji||'😶')+'</span><span class="record-label" style="color:'+moodColor+'">'+r.mood+'</span></div><span class="record-date">'+date+'</span></div>';
     if (tags.length > 0) {
       inner += '<div class="record-tags">';
-      tags.forEach(t => {
-        const st = getTagStyle(t);
-        inner += '<span class="record-tag" style="background:'+st.bg+';border:1px solid '+st.border+';color:'+st.text+'">'+t+'</span>';
-      });
+      tags.forEach(t => { const st = getTagStyle(t); inner += '<span class="record-tag" style="background:'+st.bg+';border:1px solid '+st.border+';color:'+st.text+'">'+t+'</span>'; });
       inner += '</div>';
     }
     if (r.text_note) inner += '<div class="record-text">"'+r.text_note+'"</div>';
-if (r.has_audio && r.audio_url) {
-  inner += '<div class="record-audio" style="margin-top:10px"><audio controls style="width:100%;height:36px;filter:invert(0.8)"><source src="' + r.audio_url + '" type="audio/mp4"></audio></div>';
-} else if (r.has_audio) {
-  inner += '<div class="record-audio">🎙 Áudio gravado</div>';
-}    card.innerHTML = inner;
+    if (r.has_audio && r.audio_url) {
+      inner += '<div class="record-audio" style="margin-top:10px"><audio controls style="width:100%;height:36px"><source src="'+r.audio_url+'" type="audio/mp4"></audio></div>';
+    } else if (r.has_audio) {
+      inner += '<div class="record-audio">🎙 Áudio gravado</div>';
+    }
+    card.innerHTML = inner;
     list.appendChild(card);
   });
+}
+
+// Filtra registros para o período completo (para o gráfico)
+function filterRecordsForPeriod() {
+  const now = new Date();
+  const cutoff = new Date(now - currentFilter * 24 * 60 * 60 * 1000);
+  const filtered = currentRecords.filter(r => new Date(r.created_at) >= cutoff);
+  return filtered.length > 0 ? filtered : currentRecords.slice(0, 10);
+}
+
+function clearDayFilter() {
+  selectedDayDate = null;
+  renderDetail();
 }
 
 function buildChartData(records, days) {
@@ -440,12 +533,15 @@ function buildChartData(records, days) {
     });
     const labels = Object.keys(byHour);
     const data = labels.map(k => Math.round(byHour[k].reduce((a,b)=>a+b,0)/byHour[k].length*10)/10);
-    return { labels, data, colors: data.map(v => v<=2?'#f87171':v>=4?'#4ade80':'#38bdf8') };
+    return { labels, data, colors: data.map(v => v<=2?'#f87171':v>=4?'#4ade80':'#38bdf8'), dates: labels };
   } else {
     const byDay = {}, now = new Date();
+    const dateMap = {}; // mapeia label -> dateString
     for (let i = days-1; i >= 0; i--) {
-      const key = new Date(now - i*86400000).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+      const d = new Date(now - i*86400000);
+      const key = d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
       byDay[key] = [];
+      dateMap[key] = d.toDateString();
     }
     records.forEach(r => {
       const key = new Date(r.created_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
@@ -453,18 +549,29 @@ function buildChartData(records, days) {
     });
     const labels = Object.keys(byDay);
     const data = labels.map(k => byDay[k].length>0 ? Math.round(byDay[k].reduce((a,b)=>a+b,0)/byDay[k].length*10)/10 : null);
-    return { labels, data, colors: data.map(v => v===null?'#1b2a40':v<=2?'#f87171':v>=4?'#4ade80':'#38bdf8') };
+    return { labels, data, colors: data.map(v => v===null?'#1b2a40':v<=2?'#f87171':v>=4?'#4ade80':'#38bdf8'), dateMap };
   }
 }
 
-function drawChart({ labels, data, colors }) {
+function drawChart({ labels, data, colors, dateMap }) {
   if (moodChart) { moodChart.destroy(); moodChart = null; }
   const ctx = document.getElementById('mood-chart').getContext('2d');
   moodChart = new Chart(ctx, {
     type: 'line',
-    data: { labels, datasets: [{ data, borderColor: currentColor, backgroundColor: currentColor+'18', pointBackgroundColor: colors, pointBorderColor: colors, pointRadius: 5, pointHoverRadius: 7, borderWidth: 2, tension: 0.4, fill: true, spanGaps: true }] },
+    data: { labels, datasets: [{ data, borderColor: currentColor, backgroundColor: currentColor+'18', pointBackgroundColor: colors, pointBorderColor: colors, pointRadius: 5, pointHoverRadius: 8, borderWidth: 2, tension: 0.4, fill: true, spanGaps: true }] },
     options: {
       responsive: true, maintainAspectRatio: false,
+      onClick: (e, elements) => {
+        if (elements.length > 0 && dateMap && currentFilter !== 1) {
+          const idx = elements[0].index;
+          const label = labels[idx];
+          const dateStr = dateMap[label];
+          if (dateStr) {
+            selectedDayDate = dateStr;
+            renderDetail();
+          }
+        }
+      },
       plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => { const s=['','Muito negativo','Negativo','Neutro','Positivo','Muito positivo']; return s[Math.round(ctx.raw)]||ctx.raw; } } } },
       scales: {
         x: { ticks: { color:'#5a7090', font:{size:10} }, grid: { color:'#1b2a40' } },
@@ -484,12 +591,10 @@ function buildTriggers(records) {
 }
 
 function checkAlert(records) {
-  // Alerta só quando 3+ registros de Ansiedade/Raiva nos últimos 7 dias
   const last7days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const recent = records.filter(r => new Date(r.created_at) >= last7days);
   const highCount = recent.filter(r => r.mood === 'Ansiedade' || r.mood === 'Raiva').length;
   if (highCount >= 3) return highCount + ' registros de Ansiedade ou Raiva nos últimos 7 dias — padrão que merece atenção.';
-  // Alerta de humor muito baixo consecutivo
   const last3 = records.slice(0,3);
   if (last3.length === 3 && last3.every(r => getMoodScore(r.mood) <= 2)) return '3 registros consecutivos com humor negativo.';
   return null;
