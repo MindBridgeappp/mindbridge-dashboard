@@ -374,7 +374,7 @@ function renderPatients(patients, records) {
       <div class="patient-meta">Último registro: ${lastDate} · ${patRecords.length} registro${patRecords.length!==1?'s':''}</div>
       <div class="patient-link-box" onclick="event.stopPropagation()">
         <span class="patient-link-txt">${link}</span>
-        <button class="btn-copy" onclick="copyLink('${link}')">Copiar</button>
+        <button class="btn-copy" onclick="copyLink('${patient.link_token}')">Copiar código</button>
         <button class="btn-delete" onclick="openDeleteModal(${patient.id}, '${patient.name.replace(/'/g,"\\'")}')">Excluir</button>
       </div>`;
     card.addEventListener('click', () => openPatient(patient, patRecords, color));
