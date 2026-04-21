@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MindBridge — Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #070d16; --bg2: #0d1829; --bg3: #111f33;
+      --border: #1b2a40; --text: #e2eaf4; --muted: #5a7090; --muted2: #8ba3bf;
+      --green: #4ade80; --green-dim: rgba(74,222,128,0.12); --green-border: rgba(74,222,128,0.3);
+      --blue: #38bdf8; --red: #f87171; --orange: #fb923c; --accent: #16a34a;
+      --purple: #a78bfa;
+    }
+    html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; font-size: 15px; }
+
+    /* LOGIN */
+    #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+      background: radial-gradient(ellipse at 30% 20%, rgba(22,163,74,0.08) 0%, transparent 60%), var(--bg); }
+    .login-card { width: 100%; max-width: 380px; background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 40px; }
+    .login-logo { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--green); margin-bottom: 4px; }
+    .login-sub { font-size: 12px; color: var(--muted); margin-bottom: 28px; letter-spacing: 1px; text-transform: uppercase; }
+    .login-input { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; margin-bottom: 12px; transition: border-color 0.2s; }
+    .login-input:focus { border-color: var(--green); }
+    .login-input::placeholder { color: var(--muted); }
+    .login-btn { width: 100%; padding: 13px; background: var(--accent); color: white; border: none; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .login-error { font-size: 13px; color: var(--red); margin-top: 10px; display: none; text-align: center; }
+
+    /* APP */
+    #admin-screen { display: none; }
+    .topbar { position: sticky; top: 0; z-index: 100; background: rgba(7,13,22,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .topbar-logo { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--green); }
+    .topbar-badge { font-size: 10px; background: var(--accent); color: white; padding: 2px 8px; border-radius: 20px; font-weight: 600; letter-spacing: 1px; }
+    .topbar-refresh { background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 5px 12px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+    .topbar-refresh:hover { border-color: var(--green); color: var(--green); }
+    .main { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+
+    /* STATS GRID */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
+    .stat-icon { font-size: 22px; margin-bottom: 10px; }
+    .stat-value { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--text); margin-bottom: 4px; }
+    .stat-label { font-size: 12px; color: var(--muted); }
+    .stat-card.highlight { border-color: var(--green-border); background: var(--green-dim); }
+    .stat-card.highlight .stat-value { color: var(--green); }
+
+    /* CHART */
+    .section { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+    .section-title { font-family: monospace; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 16px; }
+    .chart-wrap { position: relative; height: 180px; }
+
+    /* TABLE */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th { text-align: left; padding: 10px 14px; font-size: 10px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--border); font-weight: 600; white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    tbody tr:hover { background: var(--bg3); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: 12px 14px; color: var(--text); vertical-align: middle; }
+    .psi-name { font-weight: 600; }
+    .psi-email { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+    .badge-active { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
+    .badge-inactive { background: rgba(90,112,144,0.15); color: var(--muted); border: 1px solid var(--border); }
+    .badge-risk { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+
+    /* LOADING */
+    .loading { display: flex; align-items: center; justify-content: center; padding: 60px; color: var(--muted); gap: 10px; }
+    .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    .last-updated { font-size: 11px; color: var(--muted); text-align: right; margin-bottom: 16px; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">🌿 MindBridge</div>
+    <div class="login-sub">Painel Administrativo</div>
+    <input class="login-input" type="password" id="admin-password" placeholder="Senha de acesso" onkeydown="if(event.key==='Enter')checkPassword()" />
+    <button class="login-btn" onclick="checkPassword()">Entrar</button>
+    <div class="login-error" id="login-error">Senha incorreta.</div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="admin-screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-logo">🌿 MindBridge</span>
+      <span class="topbar-badge">ADMIN</span>
+    </div>
+    <button class="topbar-refresh" onclick="loadData()">↻ Atualizar</button>
+  </div>
+  <div class="main">
+    <div class="last-updated" id="last-updated"></div>
+    <div id="content"><div class="loading"><div class="spinner"></div> Carregando dados...</div></div>
+  </div>
+</div>
+
+<script>
+const { createClient } = supabase;
+const sb = createClient('https://vuhxuzyovxfufakbrint.supabase.co','sb_publishable_BqnA-s8cqQrWNOSWFAOSnA_3qJyhVwi');
+
+// ── Senha admin ── troque para uma senha sua
+const ADMIN_PASSWORD = 'mindbridge2024';
+
+let activityChart = null;
+
+function checkPassword() {
+  const pwd = document.getElementById('admin-password').value;
+  if (pwd === ADMIN_PASSWORD) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-screen').style.display = 'block';
+    loadData();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+async function loadData() {
+  document.getElementById('content').innerHTML = '<div class="loading"><div class="spinner"></div> Carregando dados...</div>';
+
+  // Busca todos os dados
+  const [psiRes, patRes, recRes] = await Promise.all([
+    sb.from('psychologists').select('*').order('created_at', { ascending: false }),
+    sb.from('patients').select('*').order('created_at', { ascending: false }),
+    sb.from('records').select('*').order('created_at', { ascending: false }),
+  ]);
+
+  const psychologists = psiRes.data || [];
+  const patients = patRes.data || [];
+  const records = recRes.data || [];
+
+  // Atualiza timestamp
+  document.getElementById('last-updated').textContent = 'Atualizado em ' + new Date().toLocaleString('pt-BR');
+
+  // Calcula métricas
+  const now = new Date();
+  const last7 = new Date(now - 7*24*60*60*1000);
+  const last30 = new Date(now - 30*24*60*60*1000);
+
+  const activePsis = psychologists.filter(p => {
+    const psiPatients = patients.filter(pat => pat.psychologist_id === p.id);
+    const psiPatIds = psiPatients.map(pat => pat.id);
+    return records.some(r => psiPatIds.includes(r.patient_id) && new Date(r.created_at) >= last7);
+  });
+
+  const totalAudios = records.filter(r => r.has_audio).length;
+  const recLast30 = records.filter(r => new Date(r.created_at) >= last30);
+  const recLast7 = records.filter(r => new Date(r.created_at) >= last7);
+
+  // Registros por dia (últimos 30 dias)
+  const byDay = {};
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now - i*86400000);
+    byDay[d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})] = 0;
+  }
+  recLast30.forEach(r => {
+    const key = new Date(r.created_at).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    if (byDay[key] !== undefined) byDay[key]++;
+  });
+
+  // Renderiza
+  const html = `
+    <div class="stats-grid" style="animation:fadeUp 0.3s ease">
+      <div class="stat-card highlight">
+        <div class="stat-icon">🧠</div>
+        <div class="stat-value">${psychologists.length}</div>
+        <div class="stat-label">Psicólogos cadastrados</div>
+      </div>
+      <div class="stat-card highlight">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value">${activePsis.length}</div>
+        <div class="stat-label">Ativos (últimos 7 dias)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-value">${patients.length}</div>
+        <div class="stat-label">Pacientes totais</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📝</div>
+        <div class="stat-value">${records.length}</div>
+        <div class="stat-label">Registros totais</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div class="stat-value">${recLast7.length}</div>
+        <div class="stat-label">Registros (7 dias)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🎙</div>
+        <div class="stat-value">${totalAudios}</div>
+        <div class="stat-label">Áudios gravados</div>
+      </div>
+    </div>
+
+    <div class="section" style="animation:fadeUp 0.4s ease">
+      <div class="section-title">📊 Registros por dia — últimos 30 dias</div>
+      <div class="chart-wrap"><canvas id="activity-chart"></canvas></div>
+    </div>
+
+    <div class="section" style="animation:fadeUp 0.5s ease">
+      <div class="section-title">🧠 Psicólogos (${psychologists.length})</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>CRP</th>
+              <th>Pacientes</th>
+              <th>Registros</th>
+              <th>Último registro</th>
+              <th>Status</th>
+              <th>Cadastro</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${psychologists.map(p => {
+              const pPats = patients.filter(pat => pat.psychologist_id === p.id);
+              const pPatIds = pPats.map(pat => pat.id);
+              const pRecs = records.filter(r => pPatIds.includes(r.patient_id));
+              const lastRec = pRecs[0];
+              const isActive = pRecs.some(r => new Date(r.created_at) >= last7);
+              const hasRisk = pRecs.filter(r => new Date(r.created_at) >= last7 && (r.mood === 'Ansiedade' || r.mood === 'Raiva')).length >= 3;
+              return `<tr>
+                <td>
+                  <div class="psi-name">${p.name}</div>
+                  <div class="psi-email">${p.email}</div>
+                </td>
+                <td style="color:var(--muted);font-size:12px">${p.crp || '—'}</td>
+                <td>${pPats.length}</td>
+                <td>${pRecs.length}</td>
+                <td style="font-size:12px;color:var(--muted2)">${lastRec ? new Date(lastRec.created_at).toLocaleDateString('pt-BR') : '—'}</td>
+                <td>
+                  ${hasRisk ? '<span class="badge badge-risk">⚠️ Atenção</span>' : isActive ? '<span class="badge badge-active">✓ Ativo</span>' : '<span class="badge badge-inactive">Inativo</span>'}
+                </td>
+                <td style="font-size:12px;color:var(--muted)">${new Date(p.created_at).toLocaleDateString('pt-BR')}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('content').innerHTML = html;
+
+  // Desenha gráfico
+  if (activityChart) { activityChart.destroy(); activityChart = null; }
+  const ctx = document.getElementById('activity-chart').getContext('2d');
+  const labels = Object.keys(byDay);
+  const data = Object.values(byDay);
+  activityChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: data.map(v => v > 0 ? 'rgba(74,222,128,0.5)' : 'rgba(27,42,64,0.5)'),
+        borderColor: data.map(v => v > 0 ? '#4ade80' : '#1b2a40'),
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.raw + ' registros' } } },
+      scales: {
+        x: { ticks: { color:'#5a7090', font:{size:9}, maxRotation: 0, maxTicksLimit: 10 }, grid: { display: false } },
+        y: { ticks: { color:'#5a7090', font:{size:9}, stepSize: 1 }, grid: { color:'#1b2a40' }, beginAtZero: true }
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
