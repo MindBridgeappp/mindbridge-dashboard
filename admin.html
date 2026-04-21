@@ -43,9 +43,14 @@
     .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
     .stat-icon { font-size: 22px; margin-bottom: 10px; }
     .stat-value { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--text); margin-bottom: 4px; }
+    .stat-value.small { font-size: 20px; margin-top: 4px; }
     .stat-label { font-size: 12px; color: var(--muted); }
     .stat-card.highlight { border-color: var(--green-border); background: var(--green-dim); }
     .stat-card.highlight .stat-value { color: var(--green); }
+    .stat-card.gold { border-color: rgba(250,204,21,0.3); background: rgba(250,204,21,0.08); }
+    .stat-card.gold .stat-value { color: #facc15; }
+    .stat-card.blue { border-color: rgba(56,189,248,0.3); background: rgba(56,189,248,0.08); }
+    .stat-card.blue .stat-value { color: var(--blue); }
 
     .section { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
     .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
@@ -67,17 +72,15 @@
     tbody td { padding: 12px 14px; color: var(--text); vertical-align: middle; }
     .psi-name { font-weight: 600; }
     .psi-email { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
-    .badge-active { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
-    .badge-inactive { background: rgba(90,112,144,0.15); color: var(--muted); border: 1px solid var(--border); }
-    .badge-risk { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+    .badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .badge:hover { opacity: 0.8; }
+    .badge-paying { background: rgba(250,204,21,0.15); color: #facc15; border: 1px solid rgba(250,204,21,0.3); }
+    .badge-free { background: rgba(90,112,144,0.15); color: var(--muted); border: 1px solid var(--border); }
     .no-results { padding: 32px; text-align: center; color: var(--muted); font-size: 13px; }
 
     .loading { display: flex; align-items: center; justify-content: center; padding: 60px; color: var(--muted); gap: 10px; }
     .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
     .last-updated { font-size: 11px; color: var(--muted); text-align: right; margin-bottom: 16px; }
-
-    .alert-note { background: rgba(251,146,60,0.08); border: 1px solid rgba(251,146,60,0.3); border-radius: 10px; padding: 10px 14px; font-size: 12px; color: var(--orange); margin-bottom: 20px; }
 
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
@@ -117,9 +120,10 @@ const { createClient } = supabase;
 const sb = createClient('https://vuhxuzyovxfufakbrint.supabase.co','sb_publishable_BqnA-s8cqQrWNOSWFAOSnA_3qJyhVwi');
 
 const ADMIN_PASSWORD = 'Samuel2609';
-
 let activityChart = null;
 let allPsychologists = [], allPatients = [], allRecords = [];
+// Controle local de pagantes (salvo em localStorage)
+let payingPsis = JSON.parse(localStorage.getItem('mb_paying') || '[]');
 
 function checkPassword() {
   const pwd = document.getElementById('admin-password').value;
@@ -141,19 +145,28 @@ function logout() {
 
 async function loadData() {
   document.getElementById('content').innerHTML = '<div class="loading"><div class="spinner"></div> Carregando dados...</div>';
-
   const [psiRes, patRes, recRes] = await Promise.all([
     sb.from('psychologists').select('*').order('created_at', { ascending: false }),
     sb.from('patients').select('*').order('created_at', { ascending: false }),
     sb.from('records').select('*').order('created_at', { ascending: false }),
   ]);
-
   allPsychologists = psiRes.data || [];
   allPatients = patRes.data || [];
   allRecords = recRes.data || [];
-
   document.getElementById('last-updated').textContent = 'Atualizado em ' + new Date().toLocaleString('pt-BR');
   renderContent(allPsychologists);
+}
+
+function togglePaying(psiId) {
+  if (payingPsis.includes(psiId)) {
+    payingPsis = payingPsis.filter(id => id !== psiId);
+  } else {
+    payingPsis = [...payingPsis, psiId];
+  }
+  localStorage.setItem('mb_paying', JSON.stringify(payingPsis));
+  searchPsi(document.querySelector('.search-input')?.value || '');
+  // Atualiza stat de pagantes
+  document.getElementById('stat-paying').textContent = payingPsis.length;
 }
 
 function renderContent(psychologists) {
@@ -161,6 +174,7 @@ function renderContent(psychologists) {
   const last7 = new Date(now - 7*24*60*60*1000);
   const last30 = new Date(now - 30*24*60*60*1000);
 
+  // Métricas
   const activePsis = allPsychologists.filter(p => {
     const pPatIds = allPatients.filter(pat => pat.psychologist_id === p.id).map(pat => pat.id);
     return allRecords.some(r => pPatIds.includes(r.patient_id) && new Date(r.created_at) >= last7);
@@ -169,6 +183,21 @@ function renderContent(psychologists) {
   const totalAudios = allRecords.filter(r => r.has_audio).length;
   const recLast30 = allRecords.filter(r => new Date(r.created_at) >= last30);
 
+  // Humor mais registrado
+  const moodCounts = {};
+  allRecords.forEach(r => { if (r.mood) moodCounts[r.mood] = (moodCounts[r.mood]||0) + 1; });
+  const topMood = Object.entries(moodCounts).sort((a,b)=>b[1]-a[1])[0];
+  const moodEmojis = { 'Alegria':'😊','Calma':'😌','Empolgação':'🤩','Cansaço':'😴','Preocupação':'😟','Tristeza':'😢','Ansiedade':'😰','Raiva':'😤','Frustração':'😣','Vazio':'😶' };
+
+  // Psicólogo mais ativo (mais registros nos últimos 30 dias)
+  let topPsi = null, topPsiCount = 0;
+  allPsychologists.forEach(p => {
+    const pPatIds = allPatients.filter(pat => pat.psychologist_id === p.id).map(pat => pat.id);
+    const count = recLast30.filter(r => pPatIds.includes(r.patient_id)).length;
+    if (count > topPsiCount) { topPsiCount = count; topPsi = p; }
+  });
+
+  // Gráfico
   const byDay = {};
   for (let i = 29; i >= 0; i--) {
     const d = new Date(now - i*86400000);
@@ -179,39 +208,7 @@ function renderContent(psychologists) {
     if (byDay[key] !== undefined) byDay[key]++;
   });
 
-  // Alerta se algum psicólogo tem paciente em atenção
-  const psiWithRisk = allPsychologists.filter(p => {
-    const pPatIds = allPatients.filter(pat => pat.psychologist_id === p.id).map(pat => pat.id);
-    const pRecs = allRecords.filter(r => pPatIds.includes(r.patient_id) && new Date(r.created_at) >= last7);
-    return pRecs.filter(r => r.mood === 'Ansiedade' || r.mood === 'Raiva').length >= 3;
-  });
-
-  const tableRows = psychologists.map(p => {
-    const pPats = allPatients.filter(pat => pat.psychologist_id === p.id);
-    const pPatIds = pPats.map(pat => pat.id);
-    const pRecs = allRecords.filter(r => pPatIds.includes(r.patient_id));
-    const lastRec = pRecs[0];
-    const isActive = pRecs.some(r => new Date(r.created_at) >= last7);
-    const hasRisk = pRecs.filter(r => new Date(r.created_at) >= last7 && (r.mood === 'Ansiedade' || r.mood === 'Raiva')).length >= 3;
-    return `<tr>
-      <td>
-        <div class="psi-name">${p.name}</div>
-        <div class="psi-email">${p.email}</div>
-      </td>
-      <td style="color:var(--muted);font-size:12px">${p.crp || '—'}</td>
-      <td>${pPats.length}</td>
-      <td>${pRecs.length}</td>
-      <td style="font-size:12px;color:var(--muted2)">${lastRec ? new Date(lastRec.created_at).toLocaleDateString('pt-BR') : '—'}</td>
-      <td>
-        ${hasRisk
-          ? '<span class="badge badge-risk">⚠️ Atenção</span>'
-          : isActive
-            ? '<span class="badge badge-active">✓ Ativo</span>'
-            : '<span class="badge badge-inactive">Inativo</span>'}
-      </td>
-      <td style="font-size:12px;color:var(--muted)">${new Date(p.created_at).toLocaleDateString('pt-BR')}</td>
-    </tr>`;
-  }).join('');
+  const tableRows = buildTableRows(psychologists);
 
   const html = `
     <div class="stats-grid" style="animation:fadeUp 0.3s ease">
@@ -224,6 +221,11 @@ function renderContent(psychologists) {
         <div class="stat-icon">✅</div>
         <div class="stat-value">${activePsis.length}</div>
         <div class="stat-label">Ativos (últimos 7 dias)</div>
+      </div>
+      <div class="stat-card gold">
+        <div class="stat-icon">💰</div>
+        <div class="stat-value" id="stat-paying">${payingPsis.length}</div>
+        <div class="stat-label">Pagantes</div>
       </div>
       <div class="stat-card">
         <div class="stat-icon">👥</div>
@@ -240,9 +242,17 @@ function renderContent(psychologists) {
         <div class="stat-value">${totalAudios}</div>
         <div class="stat-label">Áudios gravados</div>
       </div>
+      <div class="stat-card blue">
+        <div class="stat-icon">${topMood ? (moodEmojis[topMood[0]]||'😶') : '—'}</div>
+        <div class="stat-value small">${topMood ? topMood[0] : '—'}</div>
+        <div class="stat-label">Humor mais registrado</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-icon">🏆</div>
+        <div class="stat-value small">${topPsi ? topPsi.name.split(' ')[0] : '—'}</div>
+        <div class="stat-label">Psicólogo mais ativo (30d)</div>
+      </div>
     </div>
-
-    ${psiWithRisk.length > 0 ? `<div class="alert-note">⚠️ <strong>${psiWithRisk.map(p=>p.name).join(', ')}</strong> tem(m) pacientes com padrão de atenção nos últimos 7 dias.</div>` : ''}
 
     <div class="section" style="animation:fadeUp 0.4s ease">
       <div class="section-title">📊 Registros por dia — últimos 30 dias</div>
@@ -266,17 +276,13 @@ function renderContent(psychologists) {
               <th>Pacientes</th>
               <th>Registros</th>
               <th>Último registro</th>
-              <th>Status</th>
+              <th>Pagante</th>
               <th>Cadastro</th>
             </tr>
           </thead>
           <tbody id="psi-table-body">${tableRows}</tbody>
         </table>
       </div>
-    </div>
-
-    <div style="font-size:11px;color:var(--muted);text-align:center;padding-bottom:24px">
-      ⚠️ Status "Atenção" = psicólogo tem paciente com 3+ registros de Ansiedade/Raiva nos últimos 7 dias.
     </div>
   `;
 
@@ -309,36 +315,36 @@ function renderContent(psychologists) {
   });
 }
 
-function searchPsi(q) {
-  const filtered = q.trim() === ''
-    ? allPsychologists
-    : allPsychologists.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || p.email.toLowerCase().includes(q.toLowerCase()));
-
+function buildTableRows(psychologists) {
   const now = new Date();
   const last7 = new Date(now - 7*24*60*60*1000);
-
-  if (filtered.length === 0) {
-    document.getElementById('psi-table-body').innerHTML = '<tr><td colspan="7" class="no-results">Nenhum psicólogo encontrado.</td></tr>';
-    return;
-  }
-
-  document.getElementById('psi-table-body').innerHTML = filtered.map(p => {
+  return psychologists.map(p => {
     const pPats = allPatients.filter(pat => pat.psychologist_id === p.id);
     const pPatIds = pPats.map(pat => pat.id);
     const pRecs = allRecords.filter(r => pPatIds.includes(r.patient_id));
     const lastRec = pRecs[0];
-    const isActive = pRecs.some(r => new Date(r.created_at) >= last7);
-    const hasRisk = pRecs.filter(r => new Date(r.created_at) >= last7 && (r.mood === 'Ansiedade' || r.mood === 'Raiva')).length >= 3;
+    const isPaying = payingPsis.includes(p.id);
     return `<tr>
       <td><div class="psi-name">${p.name}</div><div class="psi-email">${p.email}</div></td>
       <td style="color:var(--muted);font-size:12px">${p.crp || '—'}</td>
       <td>${pPats.length}</td>
       <td>${pRecs.length}</td>
       <td style="font-size:12px;color:var(--muted2)">${lastRec ? new Date(lastRec.created_at).toLocaleDateString('pt-BR') : '—'}</td>
-      <td>${hasRisk ? '<span class="badge badge-risk">⚠️ Atenção</span>' : isActive ? '<span class="badge badge-active">✓ Ativo</span>' : '<span class="badge badge-inactive">Inativo</span>'}</td>
+      <td><span class="badge ${isPaying ? 'badge-paying' : 'badge-free'}" onclick="togglePaying(${p.id})">${isPaying ? '💰 Pagante' : 'Beta'}</span></td>
       <td style="font-size:12px;color:var(--muted)">${new Date(p.created_at).toLocaleDateString('pt-BR')}</td>
     </tr>`;
   }).join('');
+}
+
+function searchPsi(q) {
+  const filtered = q.trim() === ''
+    ? allPsychologists
+    : allPsychologists.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || p.email.toLowerCase().includes(q.toLowerCase()));
+  if (filtered.length === 0) {
+    document.getElementById('psi-table-body').innerHTML = '<tr><td colspan="7" class="no-results">Nenhum psicólogo encontrado.</td></tr>';
+    return;
+  }
+  document.getElementById('psi-table-body').innerHTML = buildTableRows(filtered);
 }
 </script>
 </body>
