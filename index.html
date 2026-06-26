@@ -105,6 +105,28 @@
     .filter-tab { padding: 6px 14px; border: none; border-radius: 7px; background: transparent; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.2s; }
     .filter-tab.active { background: var(--bg2); color: var(--text); font-weight: 600; border: 1px solid var(--border); }
 
+    /* MÉTRICAS — NOVO */
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .metric-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+    .metric-card.green { border-color: var(--green-border); background: var(--green-dim); }
+    .metric-card.orange { border-color: rgba(251,146,60,0.3); background: rgba(251,146,60,0.08); }
+    .metric-card.blue { border-color: rgba(56,189,248,0.3); background: rgba(56,189,248,0.08); }
+    .metric-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .metric-value { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--text); line-height: 1; }
+    .metric-value.green { color: var(--green); }
+    .metric-value.orange { color: var(--orange); }
+    .metric-value.blue { color: var(--blue); }
+    .metric-value.small { font-size: 15px; margin-top: 4px; }
+    .metric-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* DONUT + LINHA LADO A LADO — NOVO */
+    .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .donut-inner { display: flex; align-items: center; gap: 14px; }
+    .donut-canvas-wrap { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+    .donut-legend { display: flex; flex-direction: column; gap: 7px; }
+    .donut-legend-row { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted2); white-space: nowrap; }
+    .donut-legend-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+
     /* SECTIONS */
     .section { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
     .section-title { font-family: monospace; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 14px; }
@@ -150,7 +172,7 @@
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--bg2); border: 1px solid var(--green-border); border-radius: 12px; padding: 12px 18px; font-size: 13px; color: var(--green); z-index: 999; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* DESKTOP overrides */
+    /* DESKTOP */
     @media (min-width: 640px) {
       .main-content { padding: 40px 32px; }
       .topbar { padding: 0 32px; height: 60px; }
@@ -170,6 +192,12 @@
       .toast { left: auto; right: 24px; transform: translateY(10px); }
       .toast.show { transform: translateY(0); }
       .record-card { padding: 18px 20px; }
+      .metrics-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    /* mobile: charts empilhados */
+    @media (max-width: 639px) {
+      .charts-row { grid-template-columns: 1fr; }
     }
 
     @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
@@ -219,7 +247,7 @@
           <div class="page-title">Meus Pacientes</div>
           <div class="page-sub" id="patients-count"></div>
         </div>
-        <button class="btn-add" onclick="openAddModal()">+ Novo</button>
+        <button class="btn-add" onclick="openAddModal()">+ Novo Paciente</button>
       </div>
       <div class="search-wrap">
         <span class="search-icon">🔍</span>
@@ -238,12 +266,15 @@
             <div class="detail-meta" id="detail-meta"></div>
           </div>
         </div>
-        <div class="filter-tabs">
-          <button class="filter-tab active" onclick="setFilter(7, this)">7d</button>
-          <button class="filter-tab" onclick="setFilter(30, this)">30d</button>
-          <button class="filter-tab" onclick="setFilter(1, this)">Hoje</button>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div class="filter-tabs">
+            <button class="filter-tab active" onclick="setFilter(7, this)">7 dias</button>
+            <button class="filter-tab" onclick="setFilter(30, this)">30 dias</button>
+            <button class="filter-tab" onclick="setFilter(1, this)">Diário</button>
+          </div>
         </div>
       </div>
+
       <div class="section" id="reminders-section">
         <div class="section-title">🔔 Lembretes de registro</div>
         <div class="reminder-chips" id="reminder-chips"></div>
@@ -253,6 +284,7 @@
         </div>
         <div style="font-size:11px;color:var(--muted);margin-top:10px">Ativo após publicação nas lojas.</div>
       </div>
+
       <div id="detail-content"><div class="loading"><div class="spinner"></div> Carregando...</div></div>
     </div>
   </div>
@@ -290,7 +322,7 @@ const sb = createClient('https://vuhxuzyovxfufakbrint.supabase.co','sb_publishab
 
 let currentUser = null, currentPsychologist = null, currentPatient = null;
 let currentRecords = [], currentFilter = 7, currentColor = '#16a34a';
-let moodChart = null;
+let moodChart = null, donutChart = null;
 let allPatients = [], allRecords = [];
 let patientToDelete = null;
 let selectedDayDate = null;
@@ -308,6 +340,8 @@ function getTagStyle(tag) { return tagColors[tag] || { bg: 'rgba(148,163,184,0.1
 
 const moodScorePT = { 'Alegria':5,'Calma':4,'Empolgação':5,'Cansaço':2,'Preocupação':2,'Tristeza':1,'Ansiedade':1,'Raiva':1,'Frustração':2,'Vazio':1 };
 const moodColors = { 'Alegria':'#4ade80','Calma':'#38bdf8','Empolgação':'#f59e0b','Cansaço':'#94a3b8','Preocupação':'#fb923c','Tristeza':'#a78bfa','Ansiedade':'#fb923c','Raiva':'#f87171','Frustração':'#e879f9','Vazio':'#64748b' };
+const moodEmojis = { 'Alegria':'😊','Calma':'😌','Empolgação':'🤩','Cansaço':'😴','Preocupação':'😟','Tristeza':'😢','Ansiedade':'😰','Raiva':'😤','Frustração':'😣','Vazio':'😶' };
+
 function getMoodScore(mood) { return moodScorePT[mood] || 3; }
 
 function parseTags(tags) {
@@ -382,7 +416,7 @@ async function loadPatients() {
   const countEl = document.getElementById('patients-count');
   if (error || !patients || patients.length === 0) {
     countEl.textContent = '';
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🌱</div><div class="empty-title">Nenhum paciente ainda</div><div style="font-size:13px;color:var(--muted)">Toque em "+ Novo" para começar.</div></div>';
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🌱</div><div class="empty-title">Nenhum paciente ainda</div><div style="font-size:13px;color:var(--muted)">Toque em "+ Novo Paciente" para começar.</div></div>';
     return;
   }
   const ids = patients.map(p => p.id);
@@ -420,7 +454,7 @@ function renderPatients(patients, records) {
       <div class="patient-meta">Último registro: ${lastDate} · ${patRecords.length} registro${patRecords.length!==1?'s':''}</div>
       <div class="patient-link-box" onclick="event.stopPropagation()">
         <span class="patient-link-txt">Código: ${patient.link_token}</span>
-        <button class="btn-copy" onclick="copyLink('${patient.link_token}')">Copiar</button>
+        <button class="btn-copy" onclick="copyLink('${patient.link_token}')">Copiar código</button>
         <button class="btn-delete" onclick="openDeleteModal(${patient.id}, '${patient.name.replace(/'/g,"\\'")}')">Excluir</button>
       </div>`;
     card.addEventListener('click', () => openPatient(patient, patRecords, color));
@@ -460,7 +494,7 @@ async function openPatient(patient, preloadedRecords, color) {
     const { data } = await sb.from('records').select('*').eq('patient_id', patient.id).order('created_at', { ascending: false });
     currentRecords = data || [];
   }
-  document.getElementById('detail-meta').textContent = currentRecords.length+' registro'+(currentRecords.length!==1?'s':'')+' · desde '+new Date(patient.created_at).toLocaleDateString('pt-BR');
+  document.getElementById('detail-meta').textContent = currentRecords.length+' registro'+(currentRecords.length!==1?'s':'')+' · Paciente desde '+new Date(patient.created_at).toLocaleDateString('pt-BR');
   currentReminders = patient.reminder_times || [];
   renderReminders();
   renderDetail();
@@ -528,6 +562,73 @@ function filterRecordsForPeriod() {
 
 function clearDayFilter() { selectedDayDate = null; renderDetail(); }
 
+/* ── NOVO: calcula métricas resumidas ── */
+function buildMetrics(filtered, allRecs) {
+  const total = filtered.length;
+
+  // streak — dias seguidos com pelo menos 1 registro (usando todos os registros)
+  let streak = 0;
+  const today = new Date(); today.setHours(0,0,0,0);
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today - i*86400000);
+    const ds = d.toDateString();
+    if (allRecs.some(r => new Date(r.created_at).toDateString() === ds)) { streak++; }
+    else if (i > 0) { break; }
+  }
+
+  // emoção predominante no período
+  const moodCounts = {};
+  filtered.forEach(r => { if (r.mood) moodCounts[r.mood] = (moodCounts[r.mood]||0) + 1; });
+  const topMoodEntry = Object.entries(moodCounts).sort((a,b)=>b[1]-a[1])[0];
+  const topMood = topMoodEntry ? topMoodEntry[0] : null;
+  const topMoodEmoji = topMood ? (moodEmojis[topMood] || '😶') : '—';
+
+  // alertas (ansiedade/raiva)
+  const alertCount = filtered.filter(r => r.mood === 'Ansiedade' || r.mood === 'Raiva').length;
+
+  return { total, streak, topMood, topMoodEmoji, alertCount };
+}
+
+/* ── NOVO: monta HTML dos cards de métricas ── */
+function buildMetricsHTML(metrics) {
+  const alertClass = metrics.alertCount >= 3 ? 'orange' : '';
+  const alertColor = metrics.alertCount >= 3 ? 'orange' : '';
+  return `
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-label">Registros no período</div>
+      <div class="metric-value">${metrics.total}</div>
+    </div>
+    <div class="metric-card green">
+      <div class="metric-label">Streak atual</div>
+      <div class="metric-value green">🔥 ${metrics.streak}</div>
+      <div class="metric-sub">dias seguidos</div>
+    </div>
+    <div class="metric-card blue">
+      <div class="metric-label">Emoção predominante</div>
+      <div class="metric-value small blue">${metrics.topMoodEmoji} ${metrics.topMood || '—'}</div>
+    </div>
+    <div class="metric-card ${alertClass}">
+      <div class="metric-label">Ansiedade / Raiva</div>
+      <div class="metric-value ${alertColor}">${metrics.alertCount}×</div>
+      <div class="metric-sub">${metrics.alertCount >= 3 ? '⚠ Atenção' : 'no período'}</div>
+    </div>
+  </div>`;
+}
+
+/* ── NOVO: monta dados para o donut de emoções ── */
+function buildMoodDistribution(filtered) {
+  const counts = {};
+  filtered.forEach(r => { if (r.mood) counts[r.mood] = (counts[r.mood]||0) + 1; });
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  return sorted.map(([mood, count]) => ({
+    mood, count,
+    color: moodColors[mood] || '#94a3b8',
+    emoji: moodEmojis[mood] || '😶',
+    pct: Math.round(count / filtered.length * 100)
+  }));
+}
+
 function renderDetail() {
   const container = document.getElementById('detail-content');
   if (!currentRecords || currentRecords.length === 0) { container.innerHTML = '<div class="no-records">Nenhum registro ainda.</div>'; return; }
@@ -535,19 +636,54 @@ function renderDetail() {
   const chartData = buildChartData(currentFilter === 1 ? filtered : filterRecordsForPeriod(), currentFilter);
   const triggers = buildTriggers(filtered);
   const alertMsg = checkAlert(filtered);
+  const metrics = buildMetrics(filtered, currentRecords);
+  const moodDist = buildMoodDistribution(filtered);
 
-  let html = `<div class="section"><div class="section-title">📈 Humor — ${currentFilter === 1 ? 'Hoje' : currentFilter+' dias'}</div><div class="chart-wrap"><canvas id="mood-chart"></canvas></div>${currentFilter !== 1 ? '<div class="chart-hint">Toque num ponto para ver o dia</div>' : ''}</div>`;
+  // cards de métricas
+  let html = buildMetricsHTML(metrics);
+
+  // alerta
   if (alertMsg) html += `<div class="alert-box"><span style="font-size:18px">⚠️</span><div class="alert-box-text"><strong>Atenção:</strong> ${alertMsg}</div></div>`;
+
+  // gráficos lado a lado: linha de humor + donut de emoções
+  html += `<div class="charts-row">
+    <div class="section" style="margin-bottom:0">
+      <div class="section-title">📈 Humor — ${currentFilter === 1 ? 'Hoje' : currentFilter+' dias'}</div>
+      <div class="chart-wrap"><canvas id="mood-chart" role="img" aria-label="Gráfico de humor do paciente"></canvas></div>
+      ${currentFilter !== 1 ? '<div class="chart-hint">Clique num ponto para ver o dia</div>' : ''}
+    </div>
+    <div class="section" style="margin-bottom:0">
+      <div class="section-title">🎭 Distribuição de emoções</div>
+      ${moodDist.length > 0 ? `
+      <div class="donut-inner">
+        <div class="donut-canvas-wrap"><canvas id="donut-chart" role="img" aria-label="Distribuição de emoções"></canvas></div>
+        <div class="donut-legend">
+          ${moodDist.map(m => `<div class="donut-legend-row"><div class="donut-legend-dot" style="background:${m.color}"></div>${m.emoji} ${m.mood} — ${m.pct}%</div>`).join('')}
+        </div>
+      </div>` : '<div style="font-size:13px;color:var(--muted);padding:20px 0">Sem dados suficientes.</div>'}
+    </div>
+  </div>`;
+
+  // gatilhos
   if (triggers.length > 0) {
     html += '<div class="section"><div class="section-title">🏷 Gatilhos frequentes</div>';
     triggers.forEach(t => { const color = getTagStyle(t.label).text; html += `<div class="trigger-row"><span class="trigger-label">${t.label}</span><div class="trigger-bar-wrap"><div class="trigger-bar" style="width:${t.pct}%;background:${color}"></div></div><span class="trigger-count">×${t.count}</span></div>`; });
     html += '</div>';
   }
+
+  // registros
   const recordsTitle = selectedDayDate ? `📋 ${new Date(selectedDayDate).toLocaleDateString('pt-BR')} (${filtered.length})` : `📋 Registros (${filtered.length})`;
   html += `<div class="section"><div class="section-title" style="display:flex;align-items:center;justify-content:space-between">${recordsTitle}${selectedDayDate ? '<button onclick="clearDayFilter()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:var(--muted);font-size:11px;cursor:pointer;font-family:DM Sans,sans-serif">✕ Ver todos</button>' : ''}</div><div class="records-list" id="records-list"></div></div>`;
+
   container.innerHTML = html;
+
+  // desenha gráfico de linha
   drawChart(chartData);
 
+  // desenha donut
+  if (moodDist.length > 0) { drawDonut(moodDist); }
+
+  // renderiza lista de registros
   const list = document.getElementById('records-list');
   filtered.forEach(r => {
     const card = document.createElement('div');
@@ -604,6 +740,35 @@ function drawChart({ labels, data, colors, dateMap }) {
       },
       plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => { const s=['','Muito negativo','Negativo','Neutro','Positivo','Muito positivo']; return s[Math.round(ctx.raw)]||ctx.raw; } } } },
       scales: { x: { ticks: { color:'#5a7090', font:{size:9} }, grid: { color:'#1b2a40' } }, y: { min:0, max:5, ticks: { color:'#5a7090', font:{size:9}, stepSize:1 }, grid: { color:'#1b2a40' } } }
+    }
+  });
+}
+
+/* ── NOVO: desenha donut chart ── */
+function drawDonut(moodDist) {
+  if (donutChart) { donutChart.destroy(); donutChart = null; }
+  const canvas = document.getElementById('donut-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  donutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: moodDist.map(m => m.mood),
+      datasets: [{
+        data: moodDist.map(m => m.count),
+        backgroundColor: moodDist.map(m => m.color),
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      cutout: '62%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ctx.label + ': ' + ctx.raw + ' registro' + (ctx.raw !== 1 ? 's' : '') } }
+      }
     }
   });
 }
