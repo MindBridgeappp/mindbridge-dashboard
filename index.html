@@ -809,7 +809,7 @@ async function handleAddPatient() {
 function copyLink(code) { navigator.clipboard.writeText(code); showToast('✓ Código copiado!'); }
 function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
 
-init();
+init(); // v2
 </script>
 </body>
 </html>
