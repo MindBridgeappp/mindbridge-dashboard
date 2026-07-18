@@ -242,6 +242,18 @@
   </div>
 </div>
 
+<div id="recovery-screen" style="display:none; min-height:100vh; align-items:center; justify-content:center; padding:24px;">
+  <div class="auth-card">
+    <div class="auth-logo">🌿 MindBridge</div>
+    <div class="auth-tagline">Redefinir senha</div>
+    <div id="recovery-error" class="auth-error"></div>
+    <div id="recovery-success" class="auth-success"></div>
+    <div class="form-group"><label class="form-label">Nova senha</label><input class="form-input" type="password" id="new-password" placeholder="Mínimo 6 caracteres" /></div>
+    <div class="form-group"><label class="form-label">Confirme a nova senha</label><input class="form-input" type="password" id="new-password-confirm" placeholder="Repita a senha" /></div>
+    <button class="btn-primary" id="btn-new-password" onclick="handleSetNewPassword()">Salvar nova senha</button>
+  </div>
+</div>
+
 <div id="app-screen">
   <div class="topbar">
     <div class="topbar-logo">🌿 MindBridge</div>
@@ -371,9 +383,32 @@ async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (session) { currentUser = session.user; await loadPsychologist(); showApp(); }
   sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'PASSWORD_RECOVERY') { showRecovery(); return; }
     if (event === 'SIGNED_IN' && session) { currentUser = session.user; await loadPsychologist(); showApp(); }
     else if (event === 'SIGNED_OUT') { showAuth(); }
   });
+}
+
+function showRecovery() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('recovery-screen').style.display = 'flex';
+}
+
+async function handleSetNewPassword() {
+  const pw = document.getElementById('new-password').value;
+  const pw2 = document.getElementById('new-password-confirm').value;
+  const errEl = document.getElementById('recovery-error');
+  const okEl = document.getElementById('recovery-success');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+  if (pw.length < 6) { errEl.textContent = 'A senha deve ter pelo menos 6 caracteres.'; errEl.style.display = 'block'; return; }
+  if (pw !== pw2) { errEl.textContent = 'As senhas não coincidem.'; errEl.style.display = 'block'; return; }
+  const btn = document.getElementById('btn-new-password'); btn.disabled = true; btn.textContent = 'Salvando...';
+  const { error } = await sb.auth.updateUser({ password: pw });
+  if (error) { errEl.textContent = 'Não foi possível atualizar a senha. Tente novamente pelo link do e-mail.'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = 'Salvar nova senha'; return; }
+  okEl.textContent = 'Senha atualizada! Redirecionando...';
+  okEl.style.display = 'block';
+  setTimeout(() => { window.location.href = window.location.origin + '/index.html'; }, 1500);
 }
 
 async function loadPsychologist() {
