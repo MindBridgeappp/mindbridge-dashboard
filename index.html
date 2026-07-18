@@ -17,7 +17,7 @@
       --blue: #38bdf8; --red: #f87171; --orange: #fb923c; --accent: #16a34a;
     }
     html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; font-size: 15px; }
-
+ 
     /* AUTH */
     #auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
       background: radial-gradient(ellipse at 30% 20%, rgba(22,163,74,0.08) 0%, transparent 60%),
@@ -809,7 +809,7 @@ async function handleAddPatient() {
 function copyLink(code) { navigator.clipboard.writeText(code); showToast('✓ Código copiado!'); }
 function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
 
-init();
+init(); // v2
 </script>
 </body>
 </html>
