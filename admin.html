@@ -13,7 +13,7 @@
       --bg: #070d16; --bg2: #0d1829; --bg3: #111f33;
       --border: #1b2a40; --text: #e2eaf4; --muted: #5a7090; --muted2: #8ba3bf;
       --green: #4ade80; --green-dim: rgba(74,222,128,0.12); --green-border: rgba(74,222,128,0.3);
-      --blue: #38bdf8; --red: #f87171; --orange: #fb923c; --accent: #16a34a;
+      --blue: #38bdf8; --red: #f87171; --orange: #fb923c; --accent: #16a34a; --gold: #facc15; --purple: #a78bfa;
     }
     html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; font-size: 15px; }
 
@@ -39,23 +39,50 @@
     .topbar-btn.danger:hover { border-color: var(--red); color: var(--red); }
     .main { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
 
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-bottom: 24px; }
     .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
     .stat-icon { font-size: 22px; margin-bottom: 10px; }
     .stat-value { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--text); margin-bottom: 4px; }
-    .stat-value.small { font-size: 20px; margin-top: 4px; }
     .stat-label { font-size: 12px; color: var(--muted); }
     .stat-card.highlight { border-color: var(--green-border); background: var(--green-dim); }
     .stat-card.highlight .stat-value { color: var(--green); }
     .stat-card.gold { border-color: rgba(250,204,21,0.3); background: rgba(250,204,21,0.08); }
-    .stat-card.gold .stat-value { color: #facc15; }
-    .stat-card.blue { border-color: rgba(56,189,248,0.3); background: rgba(56,189,248,0.08); }
-    .stat-card.blue .stat-value { color: var(--blue); }
+    .stat-card.gold .stat-value { color: var(--gold); }
+    .stat-card.purple { border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.08); }
+    .stat-card.purple .stat-value { color: var(--purple); }
 
     .section { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
     .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
     .section-title { font-family: monospace; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
     .chart-wrap { position: relative; height: 180px; }
+
+    .funnel { display: flex; flex-direction: column; gap: 10px; }
+    .funnel-step { display: flex; align-items: center; gap: 12px; }
+    .funnel-label { width: 190px; font-size: 12px; color: var(--text); flex-shrink: 0; }
+    .funnel-bar-wrap { flex: 1; background: var(--bg3); border-radius: 20px; height: 22px; overflow: hidden; position: relative; }
+    .funnel-bar { height: 100%; border-radius: 20px; transition: width 0.6s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; min-width: 34px; }
+    .funnel-bar span { font-size: 10px; font-weight: 600; color: #04120a; }
+    .funnel-pct { width: 90px; text-align: right; font-size: 11px; color: var(--muted); flex-shrink: 0; }
+
+    /* PIPELINE DE LEADS */
+    .pipeline-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .pchip { display: flex; align-items: center; gap: 6px; border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--bg3); color: var(--muted2); transition: all 0.15s; }
+    .pchip:hover { transform: translateY(-1px); }
+    .pchip.sel { outline: 2px solid rgba(255,255,255,0.25); }
+    .pchip .n { font-family: 'DM Serif Display', serif; font-size: 15px; }
+    .pchip.c-prospectado { border-color: rgba(139,163,191,0.4); color: var(--muted2); }
+    .pchip.c-contatado { border-color: rgba(56,189,248,0.4); color: var(--blue); }
+    .pchip.c-interessado { border-color: rgba(251,146,60,0.4); color: var(--orange); }
+    .pchip.c-cadastrado { border-color: var(--green-border); color: var(--green); }
+    .pchip.c-pagante { border-color: rgba(250,204,21,0.4); color: var(--gold); }
+    .pchip.c-perdido { border-color: rgba(248,113,113,0.4); color: var(--red); }
+
+    .filters-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; align-items: center; }
+    .filter-select { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 7px 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 12px; outline: none; cursor: pointer; }
+    .filter-select:focus { border-color: var(--green); }
+    .filter-label { font-size: 11px; color: var(--muted); margin-right: 2px; }
+    .filter-clear { background: transparent; border: 1px solid var(--border); border-radius: 10px; padding: 7px 12px; color: var(--muted); font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+    .filter-clear:hover { border-color: var(--red); color: var(--red); }
 
     .search-wrap { position: relative; }
     .search-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 7px 12px 7px 34px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; width: 200px; transition: border-color 0.2s; }
@@ -63,24 +90,84 @@
     .search-input::placeholder { color: var(--muted); }
     .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; pointer-events: none; }
 
+    .btn-add { background: var(--accent); color: white; border: none; border-radius: 10px; padding: 8px 16px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-add:hover { opacity: 0.9; }
+
     .table-wrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    thead th { text-align: left; padding: 10px 14px; font-size: 10px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--border); font-weight: 600; white-space: nowrap; }
-    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    thead th { text-align: left; padding: 10px 12px; font-size: 10px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--border); font-weight: 600; white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; }
     tbody tr:hover { background: var(--bg3); }
     tbody tr:last-child { border-bottom: none; }
-    tbody td { padding: 12px 14px; color: var(--text); vertical-align: middle; }
+    tbody td { padding: 12px; color: var(--text); vertical-align: middle; }
     .psi-name { font-weight: 600; }
     .psi-email { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
-    .badge:hover { opacity: 0.8; }
-    .badge-paying { background: rgba(250,204,21,0.15); color: #facc15; border: 1px solid rgba(250,204,21,0.3); }
+    .badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+    .badge-paying { background: rgba(250,204,21,0.15); color: var(--gold); border: 1px solid rgba(250,204,21,0.3); }
     .badge-free { background: rgba(90,112,144,0.15); color: var(--muted); border: 1px solid var(--border); }
+    .badge-active { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
+    .badge-inactive { background: rgba(248,113,113,0.12); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+    .contact-warn { color: var(--orange); }
     .no-results { padding: 32px; text-align: center; color: var(--muted); font-size: 13px; }
+
+    .status-select { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px; font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600; outline: none; cursor: pointer; }
+    .status-select.s-prospectado { color: var(--muted2); }
+    .status-select.s-contatado { color: var(--blue); border-color: rgba(56,189,248,0.4); }
+    .status-select.s-interessado { color: var(--orange); border-color: rgba(251,146,60,0.4); }
+    .status-select.s-cadastrado { color: var(--green); border-color: var(--green-border); }
+    .status-select.s-pagante { color: var(--gold); border-color: rgba(250,204,21,0.4); }
+    .status-select.s-perdido { color: var(--red); border-color: rgba(248,113,113,0.4); }
+    .wa-mini { background: rgba(37,211,102,0.15); border: 1px solid rgba(37,211,102,0.35); color: #25d366; border-radius: 8px; padding: 3px 8px; font-size: 11px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+
+    /* MODAIS */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 200; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+    .modal-overlay.open { display: flex; }
+    .profile-modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; }
+    .profile-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+    .profile-name { font-family: 'DM Serif Display', serif; font-size: 22px; }
+    .profile-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .profile-close { background: transparent; border: 1px solid var(--border); border-radius: 8px; width: 30px; height: 30px; color: var(--muted); cursor: pointer; font-size: 14px; flex-shrink: 0; }
+    .profile-close:hover { border-color: var(--red); color: var(--red); }
+    .profile-block { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+    .profile-block-title { font-family: monospace; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+    .profile-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 5px 0; font-size: 13px; }
+    .profile-row .k { color: var(--muted); flex-shrink: 0; }
+    .profile-row .v { color: var(--text); text-align: right; word-break: break-word; }
+    .profile-select, .profile-input { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 12px; outline: none; }
+    .profile-select { cursor: pointer; }
+    .profile-select:focus, .profile-input:focus { border-color: var(--green); }
+    .profile-input { width: 170px; }
+    .profile-input::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.6; cursor: pointer; }
+    .form-field { margin-bottom: 12px; }
+    .form-field label { display: block; font-size: 11px; color: var(--muted2); margin-bottom: 5px; letter-spacing: 0.5px; }
+    .form-field input, .form-field select, .form-field textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: var(--green); }
+    .form-field textarea { resize: vertical; min-height: 60px; }
+    .form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-wa { display: inline-flex; align-items: center; gap: 6px; background: #25d366; color: #04120a; border: none; border-radius: 8px; padding: 7px 12px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .btn-wa:disabled { background: var(--bg2); color: var(--muted); border: 1px solid var(--border); cursor: not-allowed; }
+    .btn-mini { background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--muted2); font-family: 'DM Sans', sans-serif; font-size: 11px; cursor: pointer; }
+    .btn-mini:hover { border-color: var(--green); color: var(--green); }
+    .btn-save { width: 100%; padding: 11px; background: var(--accent); color: white; border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+    .btn-delete-lead { width: 100%; padding: 9px; background: transparent; border: 1px solid rgba(248,113,113,0.4); color: var(--red); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; margin-top: 8px; }
+    .timeline { position: relative; padding-left: 18px; }
+    .timeline::before { content: ''; position: absolute; left: 4px; top: 6px; bottom: 6px; width: 2px; background: var(--border); }
+    .tl-item { position: relative; padding: 5px 0 5px 8px; font-size: 13px; }
+    .tl-item::before { content: ''; position: absolute; left: -18px; top: 11px; width: 8px; height: 8px; border-radius: 50%; background: var(--green); border: 2px solid var(--bg3); }
+    .tl-item.pending::before { background: var(--border); }
+    .tl-item .tl-date { color: var(--muted); font-size: 11px; font-family: monospace; }
+    .tl-item.pending { color: var(--muted); }
+    .notes-area { width: 100%; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; resize: vertical; min-height: 70px; }
+    .notes-area:focus { border-color: var(--green); }
+    .notes-hint { font-size: 10px; color: var(--muted); margin-top: 6px; text-align: right; }
+    .toggle-paying-btn { width: 100%; padding: 10px; border-radius: 10px; border: none; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+    .toggle-paying-btn.make { background: var(--accent); color: white; }
+    .toggle-paying-btn.unmake { background: transparent; border: 1px solid rgba(248,113,113,0.4); color: var(--red); }
 
     .loading { display: flex; align-items: center; justify-content: center; padding: 60px; color: var(--muted); gap: 10px; }
     .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
     .last-updated { font-size: 11px; color: var(--muted); text-align: right; margin-bottom: 16px; }
+    .results-count { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
 
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
@@ -115,16 +202,88 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="profile-overlay" onclick="if(event.target===this)closeProfile()">
+  <div class="profile-modal" id="profile-modal"></div>
+</div>
+
+<div class="modal-overlay" id="lead-overlay" onclick="if(event.target===this)closeLead()">
+  <div class="profile-modal" id="lead-modal"></div>
+</div>
+
 <script>
 const { createClient } = supabase;
 const sb = createClient('https://vuhxuzyovxfufakbrint.supabase.co','sb_publishable_BqnA-s8cqQrWNOSWFAOSnA_3qJyhVwi');
 
 const ADMIN_PASSWORD = 'Samuel2609';
-let activityChart = null;
-let allPsychologists = [], allPatients = [], allRecords = [];
-// Controle local de pagantes (salvo em localStorage)
-let payingPsis = JSON.parse(localStorage.getItem('mb_paying') || '[]');
+const LEAD_STATUSES = ['prospectado','contatado','interessado','cadastrado','pagante','perdido'];
+const STATUS_LABELS = { prospectado:'Prospectado', contatado:'Contatado', interessado:'Interessado', cadastrado:'Cadastrado', pagante:'💰 Pagante', perdido:'Perdido' };
 
+let activityChart = null;
+let allPsychologists = [], allPatients = [], allRecords = [], allLeads = [];
+let crmMap = {};
+let currentProfileId = null;
+let currentLeadId = null; // null = novo lead
+let leadStatusFilter = '';
+let notesTimer = null;
+
+// ── CRM ──────────────────────────────────────────────────
+function getCrm(id) {
+  return crmMap[id] || { psychologist_id: id, paying: false, paying_since: null, payment_method: '', phone: '', notes: '', last_contact: null };
+}
+async function setCrm(id, patch) {
+  const merged = { ...getCrm(id), ...patch, psychologist_id: id, updated_at: new Date().toISOString() };
+  crmMap[id] = merged;
+  const { error } = await sb.from('crm').upsert(merged, { onConflict: 'psychologist_id' });
+  if (error) console.error('Erro ao salvar CRM:', error.message);
+}
+function countPaying() { return Object.values(crmMap).filter(c => c.paying).length; }
+
+async function migrateLocalCrm() {
+  if (localStorage.getItem('mb_crm_migrated')) return;
+  const oldCrm = JSON.parse(localStorage.getItem('mb_crm') || '{}');
+  const oldPaying = JSON.parse(localStorage.getItem('mb_paying') || '[]');
+  const rows = [];
+  Object.entries(oldCrm).forEach(([id, c]) => {
+    if (!crmMap[id]) rows.push({ psychologist_id: Number(id), paying: !!c.paying, paying_since: c.payingSince || null, payment_method: c.paymentMethod || '', notes: c.notes || '', phone: '', last_contact: null });
+  });
+  oldPaying.forEach(id => {
+    if (!crmMap[id] && !rows.find(r => r.psychologist_id === id)) rows.push({ psychologist_id: id, paying: true, paying_since: null, payment_method: '', notes: '', phone: '', last_contact: null });
+  });
+  if (rows.length > 0) {
+    const { error } = await sb.from('leads').select('id').limit(0); // no-op sanity
+    const up = await sb.from('crm').upsert(rows, { onConflict: 'psychologist_id' });
+    if (!up.error) rows.forEach(r => { crmMap[r.psychologist_id] = r; });
+  }
+  localStorage.setItem('mb_crm_migrated', '1');
+}
+
+// ── Sincronização leads ↔ cadastros ──────────────────────
+async function syncLeads() {
+  const emailMap = {};
+  allPsychologists.forEach(p => { if (p.email) emailMap[p.email.toLowerCase().trim()] = p; });
+  for (const lead of allLeads) {
+    let changed = {};
+    // Lead sem vínculo mas com email que já virou cadastro → converte
+    if (!lead.psychologist_id && lead.email) {
+      const p = emailMap[lead.email.toLowerCase().trim()];
+      if (p) {
+        changed.psychologist_id = p.id;
+        if (lead.status !== 'pagante' && lead.status !== 'perdido') changed.status = 'cadastrado';
+      }
+    }
+    // Lead vinculado cujo cliente virou pagante → sobe status
+    const linkedId = changed.psychologist_id || lead.psychologist_id;
+    if (linkedId && getCrm(linkedId).paying && lead.status !== 'pagante') {
+      changed.status = 'pagante';
+    }
+    if (Object.keys(changed).length > 0) {
+      Object.assign(lead, changed);
+      await sb.from('leads').update(changed).eq('id', lead.id);
+    }
+  }
+}
+
+// ── Auth ─────────────────────────────────────────────────
 function checkPassword() {
   const pwd = document.getElementById('admin-password').value;
   if (pwd === ADMIN_PASSWORD) {
@@ -135,7 +294,6 @@ function checkPassword() {
     document.getElementById('login-error').style.display = 'block';
   }
 }
-
 function logout() {
   document.getElementById('admin-screen').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
@@ -143,61 +301,72 @@ function logout() {
   document.getElementById('login-error').style.display = 'none';
 }
 
+// ── Dados ────────────────────────────────────────────────
 async function loadData() {
   document.getElementById('content').innerHTML = '<div class="loading"><div class="spinner"></div> Carregando dados...</div>';
-  const [psiRes, patRes, recRes] = await Promise.all([
+  const [psiRes, patRes, recRes, crmRes, leadRes] = await Promise.all([
     sb.from('psychologists').select('*').order('created_at', { ascending: false }),
     sb.from('patients').select('*').order('created_at', { ascending: false }),
     sb.from('records').select('*').order('created_at', { ascending: false }),
+    sb.from('crm').select('*'),
+    sb.from('leads').select('*').order('created_at', { ascending: false }),
   ]);
   allPsychologists = psiRes.data || [];
   allPatients = patRes.data || [];
   allRecords = recRes.data || [];
+  allLeads = leadRes.data || [];
+  crmMap = {};
+  (crmRes.data || []).forEach(r => { crmMap[r.psychologist_id] = r; });
+  if (crmRes.error) console.error('Tabela crm:', crmRes.error.message);
+  if (leadRes.error) console.error('Tabela leads:', leadRes.error.message);
+  await migrateLocalCrm();
+  await syncLeads();
   document.getElementById('last-updated').textContent = 'Atualizado em ' + new Date().toLocaleString('pt-BR');
-  renderContent(allPsychologists);
+  renderContent();
 }
 
-function togglePaying(psiId) {
-  if (payingPsis.includes(psiId)) {
-    payingPsis = payingPsis.filter(id => id !== psiId);
-  } else {
-    payingPsis = [...payingPsis, psiId];
-  }
-  localStorage.setItem('mb_paying', JSON.stringify(payingPsis));
-  searchPsi(document.querySelector('.search-input')?.value || '');
-  // Atualiza stat de pagantes
-  document.getElementById('stat-paying').textContent = payingPsis.length;
+// ── Helpers ──────────────────────────────────────────────
+function psiPatients(psiId) { return allPatients.filter(p => p.psychologist_id === psiId); }
+function psiRecords(psiId) {
+  const ids = psiPatients(psiId).map(p => p.id);
+  return allRecords.filter(r => ids.includes(r.patient_id));
 }
+function isActive7d(psiId) {
+  const last7 = new Date(Date.now() - 7*24*60*60*1000);
+  return psiRecords(psiId).some(r => new Date(r.created_at) >= last7);
+}
+function lastRecordDate(psiId) {
+  const recs = psiRecords(psiId);
+  return recs.length > 0 ? new Date(recs[0].created_at) : null;
+}
+function daysSince(dateStr) {
+  if (!dateStr) return null;
+  return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
+}
+function waLink(phone) {
+  const digits = (phone || '').replace(/\D/g, '');
+  if (!digits) return null;
+  const full = digits.length <= 11 ? '55' + digits : digits;
+  return 'https://wa.me/' + full;
+}
+function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-function renderContent(psychologists) {
+// ── Render principal ─────────────────────────────────────
+function renderContent() {
   const now = new Date();
-  const last7 = new Date(now - 7*24*60*60*1000);
   const last30 = new Date(now - 30*24*60*60*1000);
-
-  // Métricas
-  const activePsis = allPsychologists.filter(p => {
-    const pPatIds = allPatients.filter(pat => pat.psychologist_id === p.id).map(pat => pat.id);
-    return allRecords.some(r => pPatIds.includes(r.patient_id) && new Date(r.created_at) >= last7);
-  });
-
-  const totalAudios = allRecords.filter(r => r.has_audio).length;
+  const activeCount = allPsychologists.filter(p => isActive7d(p.id)).length;
   const recLast30 = allRecords.filter(r => new Date(r.created_at) >= last30);
 
-  // Humor mais registrado
-  const moodCounts = {};
-  allRecords.forEach(r => { if (r.mood) moodCounts[r.mood] = (moodCounts[r.mood]||0) + 1; });
-  const topMood = Object.entries(moodCounts).sort((a,b)=>b[1]-a[1])[0];
-  const moodEmojis = { 'Alegria':'😊','Calma':'😌','Empolgação':'🤩','Cansaço':'😴','Preocupação':'😟','Tristeza':'😢','Ansiedade':'😰','Raiva':'😤','Frustração':'😣','Vazio':'😶' };
+  const total = allPsychologists.length;
+  const withPatient = allPsychologists.filter(p => psiPatients(p.id).length > 0).length;
+  const withRecord = allPsychologists.filter(p => psiRecords(p.id).length > 0).length;
+  const paying = countPaying();
+  const pct = n => total > 0 ? Math.round(n / total * 100) : 0;
+  const barW = n => total > 0 ? Math.max(Math.round(n / total * 100), 4) : 4;
 
-  // Psicólogo mais ativo (mais registros nos últimos 30 dias)
-  let topPsi = null, topPsiCount = 0;
-  allPsychologists.forEach(p => {
-    const pPatIds = allPatients.filter(pat => pat.psychologist_id === p.id).map(pat => pat.id);
-    const count = recLast30.filter(r => pPatIds.includes(r.patient_id)).length;
-    if (count > topPsiCount) { topPsiCount = count; topPsi = p; }
-  });
+  const openLeads = allLeads.filter(l => !['cadastrado','pagante','perdido'].includes(l.status)).length;
 
-  // Gráfico
   const byDay = {};
   for (let i = 29; i >= 0; i--) {
     const d = new Date(now - i*86400000);
@@ -208,23 +377,26 @@ function renderContent(psychologists) {
     if (byDay[key] !== undefined) byDay[key]++;
   });
 
-  const tableRows = buildTableRows(psychologists);
-
   const html = `
     <div class="stats-grid" style="animation:fadeUp 0.3s ease">
+      <div class="stat-card purple">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-value">${openLeads}</div>
+        <div class="stat-label">Leads em prospecção</div>
+      </div>
       <div class="stat-card highlight">
         <div class="stat-icon">🧠</div>
-        <div class="stat-value">${allPsychologists.length}</div>
+        <div class="stat-value">${total}</div>
         <div class="stat-label">Psicólogos cadastrados</div>
       </div>
       <div class="stat-card highlight">
         <div class="stat-icon">✅</div>
-        <div class="stat-value">${activePsis.length}</div>
+        <div class="stat-value">${activeCount}</div>
         <div class="stat-label">Ativos (últimos 7 dias)</div>
       </div>
       <div class="stat-card gold">
         <div class="stat-icon">💰</div>
-        <div class="stat-value" id="stat-paying">${payingPsis.length}</div>
+        <div class="stat-value" id="stat-paying">${paying}</div>
         <div class="stat-label">Pagantes</div>
       </div>
       <div class="stat-card">
@@ -232,41 +404,133 @@ function renderContent(psychologists) {
         <div class="stat-value">${allPatients.length}</div>
         <div class="stat-label">Pacientes totais</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon">📝</div>
-        <div class="stat-value">${allRecords.length}</div>
-        <div class="stat-label">Registros totais</div>
+    </div>
+
+    <div class="section" style="animation:fadeUp 0.35s ease">
+      <div class="section-header">
+        <div class="section-title">🎯 Prospecção de leads (${allLeads.length})</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input class="search-input" type="text" id="lead-search" placeholder="Buscar lead..." oninput="renderLeadTable()" />
+          </div>
+          <button class="btn-add" onclick="openLead(null)">+ Novo lead</button>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon">🎙</div>
-        <div class="stat-value">${totalAudios}</div>
-        <div class="stat-label">Áudios gravados</div>
+
+      <div class="pipeline-chips" id="pipeline-chips"></div>
+
+      <div class="filters-bar">
+        <span class="filter-label">Filtrar:</span>
+        <select class="filter-select" id="lf-source" onchange="renderLeadTable()">
+          <option value="">Origem: todas</option>
+          <option value="Instagram">Instagram</option>
+          <option value="Google Maps">Google Maps</option>
+          <option value="Indicação">Indicação</option>
+          <option value="LinkedIn">LinkedIn</option>
+          <option value="Outro">Outro</option>
+        </select>
+        <select class="filter-select" id="lf-contact" onchange="renderLeadTable()">
+          <option value="">Contato: todos</option>
+          <option value="never">Nunca contatados</option>
+          <option value="3d">Sem contato há 3+ dias</option>
+          <option value="7d">Sem contato há 7+ dias</option>
+        </select>
+        <button class="filter-clear" onclick="clearLeadFilters()">✕ Limpar</button>
       </div>
-      <div class="stat-card blue">
-        <div class="stat-icon">${topMood ? (moodEmojis[topMood[0]]||'😶') : '—'}</div>
-        <div class="stat-value small">${topMood ? topMood[0] : '—'}</div>
-        <div class="stat-label">Humor mais registrado</div>
-      </div>
-      <div class="stat-card blue">
-        <div class="stat-icon">🏆</div>
-        <div class="stat-value small">${topPsi ? topPsi.name.split(' ')[0] : '—'}</div>
-        <div class="stat-label">Psicólogo mais ativo (30d)</div>
+
+      <div class="results-count" id="lead-count"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>WhatsApp</th>
+              <th>Especialidade</th>
+              <th>Origem</th>
+              <th>Status</th>
+              <th>Últ. contato</th>
+            </tr>
+          </thead>
+          <tbody id="lead-table-body"></tbody>
+        </table>
       </div>
     </div>
 
     <div class="section" style="animation:fadeUp 0.4s ease">
+      <div class="section-title" style="margin-bottom:14px">🔄 Funil do produto</div>
+      <div class="funnel">
+        <div class="funnel-step">
+          <span class="funnel-label">Cadastrados</span>
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:100%;background:#38bdf8"><span>${total}</span></div></div>
+          <span class="funnel-pct">100%</span>
+        </div>
+        <div class="funnel-step">
+          <span class="funnel-label">Criaram 1º paciente</span>
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${barW(withPatient)}%;background:#4ade80"><span>${withPatient}</span></div></div>
+          <span class="funnel-pct">${pct(withPatient)}%</span>
+        </div>
+        <div class="funnel-step">
+          <span class="funnel-label">Paciente registrou</span>
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${barW(withRecord)}%;background:#a3e635"><span>${withRecord}</span></div></div>
+          <span class="funnel-pct">${pct(withRecord)}%</span>
+        </div>
+        <div class="funnel-step">
+          <span class="funnel-label">Viraram pagantes</span>
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${barW(paying)}%;background:#facc15"><span>${paying}</span></div></div>
+          <span class="funnel-pct">${pct(paying)}%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" style="animation:fadeUp 0.45s ease">
       <div class="section-title">📊 Registros por dia — últimos 30 dias</div>
       <div class="chart-wrap"><canvas id="activity-chart"></canvas></div>
     </div>
 
     <div class="section" style="animation:fadeUp 0.5s ease">
       <div class="section-header">
-        <div class="section-title">🧠 Psicólogos (${allPsychologists.length})</div>
+        <div class="section-title">🧠 Psicólogos (${total})</div>
         <div class="search-wrap">
           <span class="search-icon">🔍</span>
-          <input class="search-input" type="text" placeholder="Buscar psicólogo..." oninput="searchPsi(this.value)" />
+          <input class="search-input" type="text" id="search-input" placeholder="Buscar psicólogo..." oninput="applyFilters()" />
         </div>
       </div>
+
+      <div class="filters-bar">
+        <span class="filter-label">Filtrar:</span>
+        <select class="filter-select" id="f-status" onchange="applyFilters()">
+          <option value="">Status: todos</option>
+          <option value="paying">💰 Pagantes</option>
+          <option value="beta">Beta (não pagantes)</option>
+        </select>
+        <select class="filter-select" id="f-activity" onchange="applyFilters()">
+          <option value="">Atividade: todos</option>
+          <option value="active">✅ Ativos (7 dias)</option>
+          <option value="inactive">⚠️ Inativos</option>
+        </select>
+        <select class="filter-select" id="f-patients" onchange="applyFilters()">
+          <option value="">Pacientes: todos</option>
+          <option value="0">Sem pacientes</option>
+          <option value="1-4">1 a 4 pacientes</option>
+          <option value="5+">5 ou mais</option>
+        </select>
+        <select class="filter-select" id="f-contact" onchange="applyFilters()">
+          <option value="">Contato: todos</option>
+          <option value="never">Nunca contatados</option>
+          <option value="7d">Sem contato há 7+ dias</option>
+        </select>
+        <select class="filter-select" id="f-sort" onchange="applyFilters()">
+          <option value="recent">Mais recentes</option>
+          <option value="oldest">Mais antigos</option>
+          <option value="patients">Mais pacientes</option>
+          <option value="records">Mais registros</option>
+        </select>
+        <button class="filter-clear" onclick="clearFilters()">✕ Limpar</button>
+      </div>
+
+      <div class="results-count" id="results-count"></div>
+
       <div class="table-wrap">
         <table>
           <thead>
@@ -275,12 +539,13 @@ function renderContent(psychologists) {
               <th>CRP</th>
               <th>Pacientes</th>
               <th>Registros</th>
-              <th>Último registro</th>
-              <th>Pagante</th>
+              <th>Atividade</th>
+              <th>Status</th>
+              <th>Últ. contato</th>
               <th>Cadastro</th>
             </tr>
           </thead>
-          <tbody id="psi-table-body">${tableRows}</tbody>
+          <tbody id="psi-table-body"></tbody>
         </table>
       </div>
     </div>
@@ -288,7 +553,6 @@ function renderContent(psychologists) {
 
   document.getElementById('content').innerHTML = html;
 
-  // Gráfico
   if (activityChart) { activityChart.destroy(); activityChart = null; }
   const ctx = document.getElementById('activity-chart').getContext('2d');
   const labels = Object.keys(byDay);
@@ -313,38 +577,429 @@ function renderContent(psychologists) {
       }
     }
   });
+
+  renderPipelineChips();
+  renderLeadTable();
+  applyFilters();
 }
 
-function buildTableRows(psychologists) {
-  const now = new Date();
-  const last7 = new Date(now - 7*24*60*60*1000);
-  return psychologists.map(p => {
-    const pPats = allPatients.filter(pat => pat.psychologist_id === p.id);
-    const pPatIds = pPats.map(pat => pat.id);
-    const pRecs = allRecords.filter(r => pPatIds.includes(r.patient_id));
-    const lastRec = pRecs[0];
-    const isPaying = payingPsis.includes(p.id);
-    return `<tr>
-      <td><div class="psi-name">${p.name}</div><div class="psi-email">${p.email}</div></td>
-      <td style="color:var(--muted);font-size:12px">${p.crp || '—'}</td>
-      <td>${pPats.length}</td>
-      <td>${pRecs.length}</td>
-      <td style="font-size:12px;color:var(--muted2)">${lastRec ? new Date(lastRec.created_at).toLocaleDateString('pt-BR') : '—'}</td>
-      <td><span class="badge ${isPaying ? 'badge-paying' : 'badge-free'}" onclick="togglePaying(${p.id})">${isPaying ? '💰 Pagante' : 'Beta'}</span></td>
+// ── Pipeline chips ───────────────────────────────────────
+function renderPipelineChips() {
+  const el = document.getElementById('pipeline-chips');
+  if (!el) return;
+  el.innerHTML = LEAD_STATUSES.map(s => {
+    const n = allLeads.filter(l => l.status === s).length;
+    const sel = leadStatusFilter === s ? 'sel' : '';
+    return `<div class="pchip c-${s} ${sel}" onclick="toggleLeadStatusFilter('${s}')"><span class="n">${n}</span> ${STATUS_LABELS[s]}</div>`;
+  }).join('');
+}
+
+function toggleLeadStatusFilter(s) {
+  leadStatusFilter = leadStatusFilter === s ? '' : s;
+  renderPipelineChips();
+  renderLeadTable();
+}
+
+// ── Tabela de leads ──────────────────────────────────────
+function renderLeadTable() {
+  const q = (document.getElementById('lead-search')?.value || '').trim().toLowerCase();
+  const fSource = document.getElementById('lf-source')?.value || '';
+  const fContact = document.getElementById('lf-contact')?.value || '';
+
+  let list = [...allLeads];
+  if (leadStatusFilter) list = list.filter(l => l.status === leadStatusFilter);
+  if (q) list = list.filter(l =>
+    (l.name || '').toLowerCase().includes(q) ||
+    (l.email || '').toLowerCase().includes(q) ||
+    (l.phone || '').includes(q) ||
+    (l.specialty || '').toLowerCase().includes(q)
+  );
+  if (fSource) list = list.filter(l => l.source === fSource);
+  if (fContact === 'never') list = list.filter(l => !l.last_contact);
+  if (fContact === '3d') list = list.filter(l => { const d = daysSince(l.last_contact); return d === null || d >= 3; });
+  if (fContact === '7d') list = list.filter(l => { const d = daysSince(l.last_contact); return d === null || d >= 7; });
+
+  const countEl = document.getElementById('lead-count');
+  if (countEl) countEl.textContent = list.length + ' lead' + (list.length !== 1 ? 's' : '');
+
+  const tbody = document.getElementById('lead-table-body');
+  if (!tbody) return;
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="no-results">Nenhum lead. Clique em "+ Novo lead" para adicionar o primeiro.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(l => {
+    const wa = waLink(l.phone);
+    const dContact = daysSince(l.last_contact);
+    let contactCell = '—';
+    if (l.last_contact) {
+      contactCell = new Date(l.last_contact + 'T12:00:00').toLocaleDateString('pt-BR');
+      if (dContact >= 7 && !['cadastrado','pagante','perdido'].includes(l.status)) contactCell = `<span class="contact-warn">${contactCell} (${dContact}d)</span>`;
+    }
+    return `<tr onclick="openLead(${l.id})">
+      <td><div class="psi-name">${esc(l.name)}</div>${l.email ? `<div class="psi-email">${esc(l.email)}</div>` : ''}</td>
+      <td>${wa ? `<button class="wa-mini" onclick="event.stopPropagation();window.open('${wa}','_blank')">💬 ${esc(l.phone)}</button>` : '—'}</td>
+      <td style="font-size:12px;color:var(--muted2)">${esc(l.specialty) || '—'}</td>
+      <td style="font-size:12px;color:var(--muted)">${esc(l.source) || '—'}</td>
+      <td onclick="event.stopPropagation()">
+        <select class="status-select s-${l.status}" onchange="quickStatus(${l.id}, this.value)">
+          ${LEAD_STATUSES.map(s => `<option value="${s}" ${l.status === s ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`).join('')}
+        </select>
+      </td>
+      <td style="font-size:12px;color:var(--muted2)">${contactCell}</td>
+    </tr>`;
+  }).join('');
+}
+
+function clearLeadFilters() {
+  const s = document.getElementById('lead-search'); if (s) s.value = '';
+  ['lf-source','lf-contact'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  leadStatusFilter = '';
+  renderPipelineChips();
+  renderLeadTable();
+}
+
+async function quickStatus(leadId, status) {
+  const lead = allLeads.find(l => l.id === leadId);
+  if (!lead) return;
+  lead.status = status;
+  await sb.from('leads').update({ status }).eq('id', leadId);
+  renderPipelineChips();
+  renderLeadTable();
+}
+
+// ── Modal de lead (novo/editar) ──────────────────────────
+function openLead(leadId) {
+  currentLeadId = leadId;
+  const l = leadId !== null ? allLeads.find(x => x.id === leadId) : null;
+  const isNew = !l;
+  const wa = l ? waLink(l.phone) : null;
+  const linked = l && l.psychologist_id ? allPsychologists.find(p => p.id === l.psychologist_id) : null;
+
+  document.getElementById('lead-modal').innerHTML = `
+    <div class="profile-header">
+      <div>
+        <div class="profile-name">${isNew ? 'Novo lead' : esc(l.name)}</div>
+        <div class="profile-sub">${isNew ? 'Adicionar contato à prospecção' : 'Lead desde ' + new Date(l.created_at).toLocaleDateString('pt-BR')}</div>
+      </div>
+      <button class="profile-close" onclick="closeLead()">✕</button>
+    </div>
+
+    ${linked ? `<div class="profile-block" style="border-color:var(--green-border)">
+      <div class="profile-block-title" style="color:var(--green)">✓ Convertido em cliente</div>
+      <div style="font-size:13px;color:var(--muted2);margin-bottom:8px">Este lead criou conta no painel como <strong style="color:var(--text)">${esc(linked.name)}</strong>.</div>
+      <button class="btn-mini" onclick="closeLead();openProfile(${linked.id})">Ver perfil de cliente →</button>
+    </div>` : ''}
+
+    <div class="form-field"><label>Nome *</label><input id="ld-name" type="text" placeholder="Ex: Dra. Ana Silva" value="${l ? esc(l.name) : ''}" /></div>
+    <div class="form-2col">
+      <div class="form-field"><label>WhatsApp</label><input id="ld-phone" type="tel" placeholder="(11) 99999-9999" value="${l ? esc(l.phone) : ''}" /></div>
+      <div class="form-field"><label>E-mail</label><input id="ld-email" type="email" placeholder="email@exemplo.com" value="${l ? esc(l.email) : ''}" /></div>
+    </div>
+    <div class="form-2col">
+      <div class="form-field"><label>Especialidade</label><input id="ld-specialty" type="text" placeholder="Ex: TCC, infantil, casal..." value="${l ? esc(l.specialty) : ''}" /></div>
+      <div class="form-field"><label>Origem</label>
+        <select id="ld-source">
+          ${['Instagram','Google Maps','Indicação','LinkedIn','Outro'].map(s => `<option value="${s}" ${l && l.source === s ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-2col">
+      <div class="form-field"><label>Status</label>
+        <select id="ld-status">
+          ${LEAD_STATUSES.map(s => `<option value="${s}" ${(l ? l.status : 'prospectado') === s ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-field"><label>Último contato</label><input id="ld-contact" type="date" value="${l && l.last_contact ? l.last_contact : ''}" /></div>
+    </div>
+    <div class="form-field"><label>Observações</label><textarea id="ld-notes" placeholder="Anotações sobre a conversa, interesse, objeções...">${l ? esc(l.notes) : ''}</textarea></div>
+
+    <div style="display:flex;gap:8px;margin-top:4px">
+      ${wa ? `<button class="btn-wa" onclick="window.open('${wa}','_blank')">💬 WhatsApp</button>` : ''}
+      <button class="btn-mini" onclick="document.getElementById('ld-contact').value = new Date().toISOString().slice(0,10)">Contato hoje</button>
+    </div>
+
+    <button class="btn-save" onclick="saveLead()">${isNew ? 'Adicionar lead' : 'Salvar alterações'}</button>
+    ${!isNew ? '<button class="btn-delete-lead" onclick="deleteLead()">Excluir lead</button>' : ''}
+  `;
+  document.getElementById('lead-overlay').classList.add('open');
+}
+
+function closeLead() {
+  document.getElementById('lead-overlay').classList.remove('open');
+  currentLeadId = null;
+}
+
+async function saveLead() {
+  const name = document.getElementById('ld-name').value.trim();
+  if (!name) { alert('O nome é obrigatório.'); return; }
+  const row = {
+    name,
+    phone: document.getElementById('ld-phone').value.trim(),
+    email: document.getElementById('ld-email').value.trim(),
+    specialty: document.getElementById('ld-specialty').value.trim(),
+    source: document.getElementById('ld-source').value,
+    status: document.getElementById('ld-status').value,
+    last_contact: document.getElementById('ld-contact').value || null,
+    notes: document.getElementById('ld-notes').value,
+    updated_at: new Date().toISOString(),
+  };
+  if (currentLeadId !== null) {
+    const { error } = await sb.from('leads').update(row).eq('id', currentLeadId);
+    if (error) { alert('Erro ao salvar: ' + error.message); return; }
+    const lead = allLeads.find(l => l.id === currentLeadId);
+    Object.assign(lead, row);
+  } else {
+    const { data, error } = await sb.from('leads').insert(row).select().single();
+    if (error) { alert('Erro ao adicionar: ' + error.message); return; }
+    allLeads.unshift(data);
+  }
+  closeLead();
+  await syncLeads();
+  renderPipelineChips();
+  renderLeadTable();
+  renderContent();
+}
+
+async function deleteLead() {
+  if (currentLeadId === null) return;
+  if (!confirm('Excluir este lead permanentemente?')) return;
+  await sb.from('leads').delete().eq('id', currentLeadId);
+  allLeads = allLeads.filter(l => l.id !== currentLeadId);
+  closeLead();
+  renderPipelineChips();
+  renderLeadTable();
+  renderContent();
+}
+
+// ── Filtros psicólogos ───────────────────────────────────
+function applyFilters() {
+  const q = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
+  const fStatus = document.getElementById('f-status')?.value || '';
+  const fActivity = document.getElementById('f-activity')?.value || '';
+  const fPatients = document.getElementById('f-patients')?.value || '';
+  const fContact = document.getElementById('f-contact')?.value || '';
+  const fSort = document.getElementById('f-sort')?.value || 'recent';
+
+  let list = [...allPsychologists];
+
+  if (q) list = list.filter(p => p.name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q));
+  if (fStatus === 'paying') list = list.filter(p => getCrm(p.id).paying);
+  if (fStatus === 'beta') list = list.filter(p => !getCrm(p.id).paying);
+  if (fActivity === 'active') list = list.filter(p => isActive7d(p.id));
+  if (fActivity === 'inactive') list = list.filter(p => !isActive7d(p.id));
+  if (fPatients === '0') list = list.filter(p => psiPatients(p.id).length === 0);
+  if (fPatients === '1-4') list = list.filter(p => { const n = psiPatients(p.id).length; return n >= 1 && n <= 4; });
+  if (fPatients === '5+') list = list.filter(p => psiPatients(p.id).length >= 5);
+  if (fContact === 'never') list = list.filter(p => !getCrm(p.id).last_contact);
+  if (fContact === '7d') list = list.filter(p => { const d = daysSince(getCrm(p.id).last_contact); return d === null || d >= 7; });
+
+  if (fSort === 'recent') list.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  if (fSort === 'oldest') list.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+  if (fSort === 'patients') list.sort((a,b) => psiPatients(b.id).length - psiPatients(a.id).length);
+  if (fSort === 'records') list.sort((a,b) => psiRecords(b.id).length - psiRecords(a.id).length);
+
+  const countEl = document.getElementById('results-count');
+  if (countEl) countEl.textContent = list.length + ' resultado' + (list.length !== 1 ? 's' : '');
+
+  const tbody = document.getElementById('psi-table-body');
+  if (!tbody) return;
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="no-results">Nenhum psicólogo encontrado com esses filtros.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(p => {
+    const pats = psiPatients(p.id);
+    const recs = psiRecords(p.id);
+    const active = isActive7d(p.id);
+    const c = getCrm(p.id);
+    const dContact = daysSince(c.last_contact);
+    let contactCell = '—';
+    if (c.last_contact) {
+      contactCell = new Date(c.last_contact + 'T12:00:00').toLocaleDateString('pt-BR');
+      if (dContact >= 7) contactCell = `<span class="contact-warn">${contactCell} (${dContact}d)</span>`;
+    }
+    return `<tr onclick="openProfile(${p.id})">
+      <td><div class="psi-name">${esc(p.name)}</div><div class="psi-email">${esc(p.email)}</div></td>
+      <td style="color:var(--muted);font-size:12px">${esc(p.crp) || '—'}</td>
+      <td>${pats.length}</td>
+      <td>${recs.length}</td>
+      <td><span class="badge ${active ? 'badge-active' : 'badge-inactive'}">${active ? '✅ Ativo' : '⚠️ Inativo'}</span></td>
+      <td><span class="badge ${c.paying ? 'badge-paying' : 'badge-free'}">${c.paying ? '💰 Pagante' : 'Beta'}</span></td>
+      <td style="font-size:12px;color:var(--muted2)">${contactCell}</td>
       <td style="font-size:12px;color:var(--muted)">${new Date(p.created_at).toLocaleDateString('pt-BR')}</td>
     </tr>`;
   }).join('');
 }
 
-function searchPsi(q) {
-  const filtered = q.trim() === ''
-    ? allPsychologists
-    : allPsychologists.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || p.email.toLowerCase().includes(q.toLowerCase()));
-  if (filtered.length === 0) {
-    document.getElementById('psi-table-body').innerHTML = '<tr><td colspan="7" class="no-results">Nenhum psicólogo encontrado.</td></tr>';
-    return;
+function clearFilters() {
+  const s = document.getElementById('search-input'); if (s) s.value = '';
+  ['f-status','f-activity','f-patients','f-contact'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const sort = document.getElementById('f-sort'); if (sort) sort.value = 'recent';
+  applyFilters();
+}
+
+// ── Perfil do psicólogo ──────────────────────────────────
+function openProfile(psiId) {
+  const p = allPsychologists.find(x => x.id === psiId);
+  if (!p) return;
+  currentProfileId = psiId;
+  const pats = psiPatients(psiId);
+  const recs = psiRecords(psiId);
+  const c = getCrm(psiId);
+  const active = isActive7d(psiId);
+  const lastRec = lastRecordDate(psiId);
+
+  const firstPatient = pats.length > 0 ? pats.reduce((a,b) => new Date(a.created_at) < new Date(b.created_at) ? a : b) : null;
+  const firstRecord = recs.length > 0 ? recs[recs.length - 1] : null;
+
+  const fmtD = d => new Date(d).toLocaleDateString('pt-BR');
+  const tl = [];
+  // Se veio de lead, mostra a origem na timeline
+  const originLead = allLeads.find(l => l.psychologist_id === psiId);
+  if (originLead) tl.push({ done: true, label: `Prospectado via ${originLead.source || 'origem desconhecida'}`, date: fmtD(originLead.created_at) });
+  tl.push({ done: true, label: 'Cadastro na plataforma', date: fmtD(p.created_at) });
+  if (firstPatient) tl.push({ done: true, label: 'Primeiro paciente criado', date: fmtD(firstPatient.created_at) });
+  else tl.push({ done: false, label: 'Primeiro paciente criado', date: 'pendente' });
+  if (firstRecord) tl.push({ done: true, label: 'Primeiro registro de paciente', date: fmtD(firstRecord.created_at) });
+  else tl.push({ done: false, label: 'Primeiro registro de paciente', date: 'pendente' });
+  if (c.paying) tl.push({ done: true, label: 'Virou pagante 💰', date: c.paying_since ? fmtD(c.paying_since) : 'data não registrada' });
+  else tl.push({ done: false, label: 'Virou pagante', date: 'pendente' });
+
+  const wa = waLink(c.phone);
+
+  document.getElementById('profile-modal').innerHTML = `
+    <div class="profile-header">
+      <div>
+        <div class="profile-name">${esc(p.name)}</div>
+        <div class="profile-sub">Cliente desde ${fmtD(p.created_at)}</div>
+      </div>
+      <button class="profile-close" onclick="closeProfile()">✕</button>
+    </div>
+
+    <div class="profile-block">
+      <div class="profile-block-title">📇 Cadastro</div>
+      <div class="profile-row"><span class="k">Nome</span><span class="v">${esc(p.name)}</span></div>
+      <div class="profile-row"><span class="k">E-mail</span><span class="v">${esc(p.email)}</span></div>
+      <div class="profile-row"><span class="k">CRP</span><span class="v">${esc(p.crp) || '—'}</span></div>
+      <div class="profile-row"><span class="k">Status</span><span class="v"><span class="badge ${c.paying ? 'badge-paying' : 'badge-free'}">${c.paying ? '💰 Pagante' : 'Beta'}</span></span></div>
+      <div class="profile-row"><span class="k">Atividade</span><span class="v"><span class="badge ${active ? 'badge-active' : 'badge-inactive'}">${active ? '✅ Ativo (7d)' : '⚠️ Inativo'}</span></span></div>
+    </div>
+
+    <div class="profile-block">
+      <div class="profile-block-title">📞 Contato</div>
+      <div class="profile-row">
+        <span class="k">Telefone (WhatsApp)</span>
+        <span class="v"><input class="profile-input" type="tel" placeholder="(11) 99999-9999" value="${esc(c.phone)}" onchange="savePhone(this.value)" /></span>
+      </div>
+      <div class="profile-row">
+        <span class="k">Último contato</span>
+        <span class="v" style="display:flex;gap:6px;align-items:center;justify-content:flex-end">
+          <input class="profile-input" type="date" value="${c.last_contact || ''}" onchange="saveLastContact(this.value)" style="width:140px" />
+          <button class="btn-mini" onclick="markContactToday()">Hoje</button>
+        </span>
+      </div>
+      <div style="margin-top:8px">
+        <button class="btn-wa" ${wa ? `onclick="window.open('${wa}','_blank')"` : 'disabled'}>💬 Abrir WhatsApp</button>
+      </div>
+    </div>
+
+    <div class="profile-block">
+      <div class="profile-block-title">💳 Pagamento</div>
+      <div class="profile-row">
+        <span class="k">Forma de pagamento</span>
+        <span class="v">
+          <select class="profile-select" onchange="setPaymentMethod(this.value)">
+            <option value="" ${!c.payment_method ? 'selected' : ''}>—</option>
+            <option value="Pix" ${c.payment_method === 'Pix' ? 'selected' : ''}>Pix</option>
+            <option value="Cartão" ${c.payment_method === 'Cartão' ? 'selected' : ''}>Cartão</option>
+            <option value="Boleto" ${c.payment_method === 'Boleto' ? 'selected' : ''}>Boleto</option>
+          </select>
+        </span>
+      </div>
+      <button class="toggle-paying-btn ${c.paying ? 'unmake' : 'make'}" onclick="toggleProfilePaying()">
+        ${c.paying ? 'Remover status de pagante' : '💰 Marcar como pagante'}
+      </button>
+    </div>
+
+    <div class="profile-block">
+      <div class="profile-block-title">📅 Linha do tempo</div>
+      <div class="timeline">
+        ${tl.map(t => `<div class="tl-item ${t.done ? '' : 'pending'}">${t.label}<div class="tl-date">${t.date}</div></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="profile-block">
+      <div class="profile-block-title">📈 Uso</div>
+      <div class="profile-row"><span class="k">Pacientes</span><span class="v">${pats.length}</span></div>
+      <div class="profile-row"><span class="k">Registros totais</span><span class="v">${recs.length}</span></div>
+      <div class="profile-row"><span class="k">Último registro</span><span class="v">${lastRec ? lastRec.toLocaleDateString('pt-BR') : '—'}</span></div>
+    </div>
+
+    <div class="profile-block">
+      <div class="profile-block-title">📝 Observações</div>
+      <textarea class="notes-area" id="profile-notes" placeholder="Anotações sobre este cliente (contatos, follow-ups, feedbacks)..." oninput="scheduleNotesSave()">${esc(c.notes)}</textarea>
+      <div class="notes-hint" id="notes-hint">salvo automaticamente no Supabase</div>
+    </div>
+  `;
+  document.getElementById('profile-overlay').classList.add('open');
+}
+
+function closeProfile() {
+  document.getElementById('profile-overlay').classList.remove('open');
+  currentProfileId = null;
+  applyFilters();
+}
+
+function setPaymentMethod(method) {
+  if (currentProfileId === null) return;
+  setCrm(currentProfileId, { payment_method: method });
+}
+
+function savePhone(phone) {
+  if (currentProfileId === null) return;
+  setCrm(currentProfileId, { phone });
+  openProfile(currentProfileId);
+}
+
+function saveLastContact(date) {
+  if (currentProfileId === null) return;
+  setCrm(currentProfileId, { last_contact: date || null });
+}
+
+function markContactToday() {
+  if (currentProfileId === null) return;
+  const today = new Date().toISOString().slice(0, 10);
+  setCrm(currentProfileId, { last_contact: today });
+  openProfile(currentProfileId);
+}
+
+async function toggleProfilePaying() {
+  if (currentProfileId === null) return;
+  const c = getCrm(currentProfileId);
+  if (c.paying) {
+    await setCrm(currentProfileId, { paying: false });
+  } else {
+    await setCrm(currentProfileId, { paying: true, paying_since: c.paying_since || new Date().toISOString() });
   }
-  document.getElementById('psi-table-body').innerHTML = buildTableRows(filtered);
+  await syncLeads();
+  openProfile(currentProfileId);
+  const statEl = document.getElementById('stat-paying');
+  if (statEl) statEl.textContent = countPaying();
+  renderPipelineChips();
+  renderLeadTable();
+}
+
+function scheduleNotesSave() {
+  if (notesTimer) clearTimeout(notesTimer);
+  const hint = document.getElementById('notes-hint');
+  if (hint) hint.textContent = 'salvando...';
+  notesTimer = setTimeout(() => {
+    if (currentProfileId === null) return;
+    const val = document.getElementById('profile-notes')?.value || '';
+    setCrm(currentProfileId, { notes: val });
+    if (hint) hint.textContent = '✓ salvo no Supabase';
+  }, 600);
 }
 </script>
 </body>
