@@ -380,6 +380,21 @@ function isHighRiskPatient(records) {
 }
 
 async function init() {
+  // Detecta link de recuperação de senha pela URL (formato #... ou ?...)
+  const hash = window.location.hash || '';
+  const query = window.location.search || '';
+  const isRecovery = hash.includes('type=recovery') || query.includes('type=recovery');
+  const hasCode = query.includes('code=') || hash.includes('access_token=');
+
+  if (isRecovery) {
+    // Aguarda o Supabase processar o token da URL e abre a tela de nova senha
+    showRecovery();
+    sb.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') showAuth();
+    });
+    return;
+  }
+
   const { data: { session } } = await sb.auth.getSession();
   if (session) { currentUser = session.user; await loadPsychologist(); showApp(); }
   sb.auth.onAuthStateChange(async (event, session) => {
@@ -404,6 +419,12 @@ async function handleSetNewPassword() {
   if (pw.length < 6) { errEl.textContent = 'A senha deve ter pelo menos 6 caracteres.'; errEl.style.display = 'block'; return; }
   if (pw !== pw2) { errEl.textContent = 'As senhas não coincidem.'; errEl.style.display = 'block'; return; }
   const btn = document.getElementById('btn-new-password'); btn.disabled = true; btn.textContent = 'Salvando...';
+  // Links novos do Supabase vêm com ?code=... — troca por sessão antes de atualizar
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) { await sb.auth.exchangeCodeForSession(code); }
+  } catch (e) { /* sessão já ativa via hash token */ }
   const { error } = await sb.auth.updateUser({ password: pw });
   if (error) { errEl.textContent = 'Não foi possível atualizar a senha. Tente novamente pelo link do e-mail.'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = 'Salvar nova senha'; return; }
   okEl.textContent = 'Senha atualizada! Redirecionando...';
