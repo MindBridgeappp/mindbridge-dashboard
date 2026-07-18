@@ -35,6 +35,11 @@
     .form-input::placeholder { color: var(--muted); }
     .btn-primary { width: 100%; padding: 13px; background: var(--accent); color: white; border: none; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px; transition: opacity 0.2s, transform 0.1s; box-shadow: 0 0 24px rgba(74,222,128,0.2); }
     .btn-primary:hover { opacity: 0.9; } .btn-primary:active { transform: scale(0.98); } .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .privacy-check { display: flex; align-items: flex-start; gap: 8px; margin: 4px 0 8px; font-size: 12px; color: var(--muted2); line-height: 1.5; }
+    .privacy-check input { margin-top: 2px; width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+    .privacy-check a { color: var(--green); text-decoration: underline; }
+    .forgot-link { display: block; text-align: center; margin-top: 14px; font-size: 13px; color: var(--muted2); cursor: pointer; background: none; border: none; width: 100%; font-family: 'DM Sans', sans-serif; text-decoration: underline; }
+    .forgot-link:hover { color: var(--green); }
     .auth-error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); border-radius: 10px; padding: 12px; font-size: 13px; color: var(--red); margin-bottom: 16px; display: none; }
     .auth-success { background: var(--green-dim); border: 1px solid var(--green-border); border-radius: 10px; padding: 12px; font-size: 13px; color: var(--green); margin-bottom: 16px; display: none; }
 
@@ -221,12 +226,17 @@
       <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" type="email" id="login-email" placeholder="seu@email.com" /></div>
       <div class="form-group"><label class="form-label">Senha</label><input class="form-input" type="password" id="login-password" placeholder="••••••••" /></div>
       <button class="btn-primary" id="btn-login" onclick="handleLogin()">Entrar</button>
+      <button class="forgot-link" onclick="handleForgotPassword()">Esqueci minha senha</button>
     </div>
     <div id="tab-register" style="display:none">
       <div class="form-group"><label class="form-label">Nome completo</label><input class="form-input" type="text" id="reg-name" placeholder="Dra. Ana Silva" /></div>
       <div class="form-group"><label class="form-label">CRP</label><input class="form-input" type="text" id="reg-crp" placeholder="06/123456" /></div>
       <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" type="email" id="reg-email" placeholder="seu@email.com" /></div>
       <div class="form-group"><label class="form-label">Senha</label><input class="form-input" type="password" id="reg-password" placeholder="Mínimo 6 caracteres" /></div>
+      <label class="privacy-check">
+        <input type="checkbox" id="reg-privacy" />
+        <span>Li e concordo com a <a href="https://www.mindbridgeapp.com.br/privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a> e o tratamento de dados conforme a LGPD.</span>
+      </label>
       <button class="btn-primary" id="btn-register" onclick="handleRegister()">Criar conta</button>
     </div>
   </div>
@@ -390,11 +400,21 @@ async function handleLogin() {
   if (error) { showAuthError('E-mail ou senha incorretos.'); btn.disabled=false; btn.textContent='Entrar'; }
 }
 
+async function handleForgotPassword() {
+  const email = document.getElementById('login-email').value.trim();
+  clearAuthMessages();
+  if (!email) { showAuthError('Digite seu e-mail no campo acima e clique novamente em "Esqueci minha senha".'); return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/index.html' });
+  if (error) { showAuthError('Não foi possível enviar o e-mail de recuperação. Tente novamente.'); return; }
+  showAuthSuccess('Enviamos um link de recuperação para o seu e-mail. Verifique sua caixa de entrada.');
+}
+
 async function handleRegister() {
   const name=document.getElementById('reg-name').value.trim(), crp=document.getElementById('reg-crp').value.trim(),
         email=document.getElementById('reg-email').value.trim(), password=document.getElementById('reg-password').value;
   if (!name||!email||!password) { showAuthError('Preencha todos os campos obrigatórios.'); return; }
   if (password.length<6) { showAuthError('Senha deve ter pelo menos 6 caracteres.'); return; }
+  if (!document.getElementById('reg-privacy').checked) { showAuthError('Você precisa aceitar a Política de Privacidade para continuar.'); return; }
   const btn=document.getElementById('btn-register'); btn.disabled=true; btn.textContent='Criando conta...'; clearAuthMessages();
   const { data, error } = await sb.auth.signUp({ email, password });
   if (error) { showAuthError('Erro ao criar conta: '+error.message); btn.disabled=false; btn.textContent='Criar conta'; return; }
