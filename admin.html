@@ -186,9 +186,10 @@
   <div class="login-card">
     <div class="login-logo">🌿 MindBridge</div>
     <div class="login-sub">Painel Administrativo</div>
-    <input class="login-input" type="password" id="admin-password" placeholder="Senha de acesso" onkeydown="if(event.key==='Enter')checkPassword()" />
-    <button class="login-btn" onclick="checkPassword()">Entrar</button>
-    <div class="login-error" id="login-error">Senha incorreta.</div>
+    <input class="login-input" type="email" id="admin-email" placeholder="E-mail de administrador" onkeydown="if(event.key==='Enter')document.getElementById('admin-password').focus()" />
+    <input class="login-input" type="password" id="admin-password" placeholder="Senha" onkeydown="if(event.key==='Enter')doLogin()" />
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-error" id="login-error">E-mail ou senha incorretos.</div>
   </div>
 </div>
 
@@ -221,7 +222,6 @@
 const { createClient } = supabase;
 const sb = createClient('https://vuhxuzyovxfufakbrint.supabase.co','sb_publishable_BqnA-s8cqQrWNOSWFAOSnA_3qJyhVwi');
 
-const ADMIN_PASSWORD = 'Samuel2609';
 const LEAD_STATUSES = ['prospectado','contatado','interessado','cadastrado','pagante','perdido'];
 const STATUS_LABELS = { prospectado:'Prospectado', contatado:'Contatado', interessado:'Interessado', cadastrado:'Cadastrado', pagante:'💰 Pagante', perdido:'Perdido' };
 
@@ -293,19 +293,52 @@ async function syncLeads() {
 }
 
 // ── Auth ─────────────────────────────────────────────────
-function checkPassword() {
-  const pwd = document.getElementById('admin-password').value;
-  if (pwd === ADMIN_PASSWORD) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('admin-screen').style.display = 'block';
-    loadData();
-  } else {
-    document.getElementById('login-error').style.display = 'block';
+async function doLogin() {
+  const email = document.getElementById('admin-email').value.trim();
+  const password = document.getElementById('admin-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  if (!email || !password) { errEl.textContent = 'Preencha e-mail e senha.'; errEl.style.display = 'block'; return; }
+  const btn = document.querySelector('.login-btn'); btn.disabled = true; btn.textContent = 'Entrando...';
+
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) {
+    errEl.textContent = 'E-mail ou senha incorretos.'; errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Entrar';
+    return;
   }
+  // Verifica se o usuário é administrador autorizado
+  const { data: isAdm, error: admErr } = await sb.rpc('is_admin');
+  if (admErr || !isAdm) {
+    await sb.auth.signOut();
+    errEl.textContent = 'Acesso restrito. Esta conta não tem permissão de administrador.';
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Entrar';
+    return;
+  }
+  btn.disabled = false; btn.textContent = 'Entrar';
+  showAdmin();
 }
-function logout() {
+
+function showAdmin() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-screen').style.display = 'block';
+  loadData();
+}
+
+async function checkExistingSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  const { data: isAdm } = await sb.rpc('is_admin');
+  if (isAdm) showAdmin();
+  else await sb.auth.signOut();
+}
+
+async function logout() {
+  await sb.auth.signOut();
   document.getElementById('admin-screen').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('admin-email').value = '';
   document.getElementById('admin-password').value = '';
   document.getElementById('login-error').style.display = 'none';
 }
@@ -1094,6 +1127,9 @@ function scheduleNotesSave() {
     if (hint) hint.textContent = '✓ salvo no Supabase';
   }, 600);
 }
+
+// Mantém a sessão ao recarregar a página
+checkExistingSession();
 </script>
 </body>
 </html>
