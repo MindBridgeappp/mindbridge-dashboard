@@ -83,6 +83,21 @@
     .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; pointer-events: none; }
 
     .btn-add { background: var(--accent); color: white; border: none; border-radius: 10px; padding: 8px 16px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .cost-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; }
+    .cost-input:focus { border-color: var(--green); }
+    .cost-config { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+    .cost-config-item { display: flex; align-items: center; gap: 8px; }
+    .cost-config-label { font-size: 12px; color: var(--muted2); }
+    .cost-del { background: transparent; border: 1px solid rgba(248,113,113,0.3); color: var(--red); border-radius: 6px; padding: 4px 9px; font-size: 11px; cursor: pointer; }
+    .cost-del:hover { background: rgba(248,113,113,0.1); }
+    .cost-totals { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+    .cost-total-box { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 14px 20px; flex: 1; min-width: 140px; }
+    .cost-total-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .cost-total-value { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--text); }
+    .cost-total-value.green { color: var(--green); }
+    .breakeven-box { background: rgba(250,204,21,0.06); border: 1px solid rgba(250,204,21,0.25); border-radius: 12px; padding: 14px 18px; margin-top: 12px; }
+    .breakeven-result { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--muted2); }
+    .breakeven-result strong { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--gold); }
     .btn-add:hover { opacity: 0.9; }
 
     .table-wrap { overflow-x: auto; }
@@ -211,7 +226,10 @@ const LEAD_STATUSES = ['prospectado','contatado','interessado','cadastrado','pag
 const STATUS_LABELS = { prospectado:'Prospectado', contatado:'Contatado', interessado:'Interessado', cadastrado:'Cadastrado', pagante:'💰 Pagante', perdido:'Perdido' };
 
 let allPsychologists = [], allPatients = [], allRecords = [], allLeads = [];
+let allCosts = [];
 let crmMap = {};
+const DEFAULT_DOLLAR = 5.50;
+const DEFAULT_SUB_PRICE = 97;
 let currentProfileId = null;
 let currentLeadId = null; // null = novo lead
 let leadStatusFilter = '';
@@ -295,22 +313,26 @@ function logout() {
 // ── Dados ────────────────────────────────────────────────
 async function loadData() {
   document.getElementById('content').innerHTML = '<div class="loading"><div class="spinner"></div> Carregando dados...</div>';
-  const [psiRes, patRes, recRes, crmRes, leadRes] = await Promise.all([
+  const [psiRes, patRes, recRes, crmRes, leadRes, costRes] = await Promise.all([
     sb.from('psychologists').select('*').order('created_at', { ascending: false }),
     sb.from('patients').select('*').order('created_at', { ascending: false }),
     sb.from('records').select('*').order('created_at', { ascending: false }),
     sb.from('crm').select('*'),
     sb.from('leads').select('*').order('created_at', { ascending: false }),
+    sb.from('costs').select('*').order('id', { ascending: true }),
   ]);
   allPsychologists = psiRes.data || [];
   allPatients = patRes.data || [];
   allRecords = recRes.data || [];
   allLeads = leadRes.data || [];
+  allCosts = costRes.data || [];
   crmMap = {};
   (crmRes.data || []).forEach(r => { crmMap[r.psychologist_id] = r; });
   if (crmRes.error) console.error('Tabela crm:', crmRes.error.message);
   if (leadRes.error) console.error('Tabela leads:', leadRes.error.message);
+  if (costRes.error) console.error('Tabela costs:', costRes.error.message);
   await migrateLocalCrm();
+  await seedCostsIfEmpty();
   await syncLeads();
   document.getElementById('last-updated').textContent = 'Atualizado em ' + new Date().toLocaleString('pt-BR');
   renderContent();
@@ -343,6 +365,158 @@ function waLink(phone) {
 function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ── Render principal ─────────────────────────────────────
+// ── Custos fixos ─────────────────────────────────────────
+const COST_SEED = [
+  { name: 'Apple Developer Program', plan: 'Obrigatório p/ App Store', amount: 99, currency: 'USD', cycle: 'Anual' },
+  { name: 'Google Play Console', plan: 'Taxa única (já paga)', amount: 25, currency: 'USD', cycle: 'Único' },
+  { name: 'Supabase', plan: 'Free tier', amount: 0, currency: 'USD', cycle: 'Mensal' },
+  { name: 'Vercel', plan: 'Hobby (free)', amount: 0, currency: 'USD', cycle: 'Mensal' },
+  { name: 'Expo EAS', plan: 'Free tier', amount: 0, currency: 'USD', cycle: 'Mensal' },
+  { name: 'Firebase (push)', plan: 'Spark (free)', amount: 0, currency: 'USD', cycle: 'Mensal' },
+  { name: 'Domínio mindbridgeapp.com.br', plan: 'Registro.br', amount: 40, currency: 'BRL', cycle: 'Anual' },
+  { name: 'Claude AI', plan: 'Pro', amount: 120, currency: 'BRL', cycle: 'Mensal' },
+  { name: 'Gmail profissional', plan: 'Pro', amount: 40, currency: 'BRL', cycle: 'Mensal' },
+];
+
+async function seedCostsIfEmpty() {
+  if (allCosts.length > 0) return;
+  // Configuração inicial (cotação e preço) na primeira linha especial guardada em localStorage
+  const { data, error } = await sb.from('costs').insert(COST_SEED.map(c => ({...c}))).select();
+  if (!error && data) allCosts = data.sort((a,b) => a.id - b.id);
+}
+
+function getDollarRate() {
+  const v = parseFloat(localStorage.getItem('mb_dollar') || DEFAULT_DOLLAR);
+  return isNaN(v) ? DEFAULT_DOLLAR : v;
+}
+function getSubPrice() {
+  const v = parseFloat(localStorage.getItem('mb_subprice') || DEFAULT_SUB_PRICE);
+  return isNaN(v) ? DEFAULT_SUB_PRICE : v;
+}
+
+function costMonthlyBRL(c) {
+  if (c.cycle === 'Único') return 0;
+  let base = c.currency === 'USD' ? (c.amount || 0) * getDollarRate() : (c.amount || 0);
+  if (c.cycle === 'Anual') base = base / 12;
+  return base;
+}
+function totalMonthly() { return allCosts.reduce((s, c) => s + costMonthlyBRL(c), 0); }
+
+function fmtBRL(v) { return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+async function saveDollarRate(v) {
+  localStorage.setItem('mb_dollar', v);
+  renderCostsSection();
+}
+async function saveSubPrice(v) {
+  localStorage.setItem('mb_subprice', v);
+  renderCostsSection();
+}
+
+async function addCost() {
+  const row = { name: 'Novo serviço', plan: '', amount: 0, currency: 'BRL', cycle: 'Mensal' };
+  const { data, error } = await sb.from('costs').insert(row).select().single();
+  if (error) { alert('Erro ao adicionar: ' + error.message); return; }
+  allCosts.push(data);
+  renderCostsSection();
+}
+
+async function updateCost(id, field, value) {
+  const c = allCosts.find(x => x.id === id);
+  if (!c) return;
+  if (field === 'amount') value = parseFloat(value) || 0;
+  c[field] = value;
+  await sb.from('costs').update({ [field]: value }).eq('id', id);
+  renderCostsSection();
+}
+
+async function deleteCost(id) {
+  if (!confirm('Remover este custo?')) return;
+  await sb.from('costs').delete().eq('id', id);
+  allCosts = allCosts.filter(c => c.id !== id);
+  renderCostsSection();
+}
+
+function renderCostsSection() {
+  const el = document.getElementById('costs-section');
+  if (!el) return;
+  const rate = getDollarRate();
+  const subPrice = getSubPrice();
+  const totalM = totalMonthly();
+  const totalA = totalM * 12;
+  const breakeven = subPrice > 0 ? Math.ceil(totalM / subPrice) : 0;
+
+  const rows = allCosts.map(c => `
+    <tr>
+      <td><input class="cost-input" value="${(c.name||'').replace(/"/g,'&quot;')}" onchange="updateCost(${c.id},'name',this.value)" style="width:100%;min-width:150px" /></td>
+      <td><input class="cost-input" value="${(c.plan||'').replace(/"/g,'&quot;')}" onchange="updateCost(${c.id},'plan',this.value)" style="width:100%;min-width:120px" /></td>
+      <td><input class="cost-input" type="number" step="0.01" value="${c.amount||0}" onchange="updateCost(${c.id},'amount',this.value)" style="width:80px" /></td>
+      <td>
+        <select class="cost-input" onchange="updateCost(${c.id},'currency',this.value)">
+          <option value="BRL" ${c.currency==='BRL'?'selected':''}>BRL</option>
+          <option value="USD" ${c.currency==='USD'?'selected':''}>USD</option>
+        </select>
+      </td>
+      <td>
+        <select class="cost-input" onchange="updateCost(${c.id},'cycle',this.value)">
+          <option value="Mensal" ${c.cycle==='Mensal'?'selected':''}>Mensal</option>
+          <option value="Anual" ${c.cycle==='Anual'?'selected':''}>Anual</option>
+          <option value="Único" ${c.cycle==='Único'?'selected':''}>Único</option>
+        </select>
+      </td>
+      <td style="font-weight:600;color:var(--text);white-space:nowrap">${fmtBRL(costMonthlyBRL(c))}</td>
+      <td><button class="cost-del" onclick="deleteCost(${c.id})">✕</button></td>
+    </tr>
+  `).join('');
+
+  el.innerHTML = `
+    <div class="section-header">
+      <div class="section-title">💰 Custos fixos</div>
+      <button class="btn-add" onclick="addCost()">+ Adicionar custo</button>
+    </div>
+
+    <div class="cost-config">
+      <div class="cost-config-item">
+        <span class="cost-config-label">Cotação USD → BRL:</span>
+        <input class="cost-input" type="number" step="0.01" value="${rate}" onchange="saveDollarRate(this.value)" style="width:80px" />
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Serviço</th><th>Plano</th><th>Valor</th><th>Moeda</th><th>Ciclo</th><th>Custo mensal</th><th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+
+    <div class="cost-totals">
+      <div class="cost-total-box">
+        <div class="cost-total-label">Total mensal</div>
+        <div class="cost-total-value green">${fmtBRL(totalM)}</div>
+      </div>
+      <div class="cost-total-box">
+        <div class="cost-total-label">Total anual</div>
+        <div class="cost-total-value">${fmtBRL(totalA)}</div>
+      </div>
+    </div>
+
+    <div class="breakeven-box">
+      <div class="cost-config-item" style="margin-bottom:10px">
+        <span class="cost-config-label">Preço da assinatura (R$/mês):</span>
+        <input class="cost-input" type="number" step="1" value="${subPrice}" onchange="saveSubPrice(this.value)" style="width:80px" />
+      </div>
+      <div class="breakeven-result">
+        <span>Assinantes para cobrir os custos fixos:</span>
+        <strong>${breakeven}</strong>
+      </div>
+    </div>
+  `;
+}
+
 function renderContent() {
   const activeCount = allPsychologists.filter(p => isActive7d(p.id)).length;
   const total = allPsychologists.length;
@@ -377,6 +551,8 @@ function renderContent() {
         <div class="stat-label">Pacientes totais</div>
       </div>
     </div>
+
+    <div class="section" id="costs-section" style="animation:fadeUp 0.32s ease"></div>
 
     <div class="section" style="animation:fadeUp 0.35s ease">
       <div class="section-header">
@@ -494,6 +670,7 @@ function renderContent() {
 
   document.getElementById('content').innerHTML = html;
 
+  renderCostsSection();
   renderPipelineChips();
   renderLeadTable();
   applyFilters();
